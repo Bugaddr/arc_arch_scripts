@@ -122,12 +122,11 @@ askvars() {
 	read -rep 'Enter new Timezone: ' -i 'Asia/Kolkata' TZONE
 	echo -e "\nUsername = $USERN\nHostname = $HNAME\nTimezone = $TZONE\n"
 	read -rep 'Is above data correct? [Y/N]: ' DATAYN
-	if [[ $DATAYN =~ ^[Yy]$ ]]; then br; else
-		clear
-		askvars
-	fi
+	if [[ $DATAYN =~ ^[Yy]$ ]]; then true; else clear && askvars; fi
 }
 
+# Vars
+askvars
 # Timezone & Hwclock
 ln -sf /usr/share/zoneinfo/"$TZONE" /etc/localtime
 hwclock --systohc --utc
@@ -153,6 +152,8 @@ grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Arch
 # Services
 systemctl enable --now NetworkManager
 systemctl enable --now --user pipewire pipewire-pulse wireplumber
+# Self delete
+rm --  "$( readlink -f -- "${BASH_SOURCE[0]:-$0}" 2> '/dev/null'; )";
 EOF
 
 	# Chroot script
