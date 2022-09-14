@@ -17,22 +17,6 @@ tablesize() {
 	br
 }
 
-askvars() {
-	br
-	echo -e 'Use only small character without symbol\n'
-	read -rep 'Enter new Username: ' -i 'user' USERN
-	read -rep 'Enter new Hostname: ' -i 'host' HNAME
-	read -rep 'Enter new Timezone: ' -i 'Asia/Kolkata' TZONE
-	br
-	echo -e "Username = $USERN\nHostname = $HNAME\nTimezone = $TZONE\n"
-	read -rep 'Is above data correct? [Y/N]: ' DATAYN
-	if [[ $DATAYN =~ ^[Yy]$ ]]; then br; else
-		br
-		clear
-		UHOST
-	fi
-}
-
 #### STEPS ###
 postinstall() {
 	timedatectl set-ntp true
@@ -129,36 +113,50 @@ base() {
 }
 
 chroot() {
-	# Ask variables
-	askvars
-	# Timezone & Hwclock
-	arch-chroot /mnt bash -c "ln -sf /usr/share/zoneinfo/$TZONE /etc/localtime && exit"
-	arch-chroot /mnt bash -c 'hwclock --systohc --utc && exit'
-	# Localization
-	arch-chroot /mnt bash -c 'sed -i "s|#en_US.UTF-8|en_US.UTF-8|g" /etc/locale.gen && exit'
-	arch-chroot /mnt bash -c 'locale-gen && exit'
-	arch-chroot /mnt bash -c 'echo -e "LANG=en_US.UTF-8\nLANGUAGE=en_US\nLC_ALL=C" >/etc/locale.conf && exit'
-	# Network configuration
-	arch-chroot /mnt bash -c "echo $HNAME >/etc/hostname && exit"
-	arch-chroot /mnt bash -c "echo -e 127.0.0.1 $HNAME\n::1 $HNAME\n127.0.1.1 $HNAME.localdomain $HNAME >/etc/hosts && exit"
-	# Sudo
-	arch-chroot /mnt bash -c 'if groups | grep sudo >/dev/null; then true; else groupadd sudo; fi && exit'
-	arch-chroot /mnt bash -c 'sed -i "s/^#\s*\(%wheel\s\+ALL=(ALL)\s\+ALL\)/\1/" /etc/sudoers && exit'
-	# Root-User Password
-	br
-	arch-chroot /mnt bash -c 'echo "Enter powerfull password for Root" && exit'
-	arch-chroot /mnt bash -c 'until passwd || ((count++ >= 5)); do echo TryAgain; done && exit'
-	# New-User Password
-	br
-	arch-chroot /mnt bash -c "echo Enter powerfull password for new user $USERN && exit"
-	arch-chroot /mnt bash -c "useradd -mUG wheel,users,games,power,optical,storage,audio,video -s /bin/bash $USERN && exit"
-	arch-chroot /mnt bash -c "until passwd $USERN || ((count++ >= 5)); do echo TryAgain; done && exit"
-	# Bootloader
-	arch-chroot /mnt bash -c 'grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Arch && exit'
-	# Services
-	arch-chroot /mnt bash -c 'systemctl enable --now NetworkManager && exit'
-	arch-chroot /mnt bash -c 'systemctl enable --now --user pipewire pipewire-pulse wireplumber && exit'
+	cat <<EOF >>/mnt/chroot.sh
+#!/usr/bin/env bash
+askvars() {
+	echo -e 'Use only small character without symbol\n'
+	read -rep 'Enter new Username: ' -i 'user' USERN
+	read -rep 'Enter new Hostname: ' -i 'host' HNAME
+	read -rep 'Enter new Timezone: ' -i 'Asia/Kolkata' TZONE
+	echo -e "\nUsername = $USERN\nHostname = $HNAME\nTimezone = $TZONE\n"
+	read -rep 'Is above data correct? [Y/N]: ' DATAYN
+	if [[ $DATAYN =~ ^[Yy]$ ]]; then br; else
+		clear
+		askvars
+	fi
+}
 
+# Timezone & Hwclock
+ln -sf /usr/share/zoneinfo/"$TZONE" /etc/localtime
+hwclock --systohc --utc
+# Localization
+sed -i 's|#en_US.UTF-8|en_US.UTF-8|g' /etc/locale.gen
+locale-gen
+echo -e 'LANG=en_US.UTF-8\nLANGUAGE=en_US\nLC_ALL=C' >/etc/locale.conf
+# Network configuration
+echo "$HNAME" >/etc/hostname
+echo -e "127.0.0.1 $HNAME\n::1 $HNAME\n127.0.1.1 $HNAME.localdomain $HNAME" >/etc/hosts
+# Sudo
+if groups | grep sudo >/dev/null; then true; else groupadd sudo; fi
+sed -i 's/^#\s*\(%wheel\s\+ALL=(ALL)\s\+ALL\)/\1/' /etc/sudoers
+# Root User
+echo 'Enter powerfull password for Root'
+until passwd || ((count++ >= 5)); do echo TryAgain; done
+# Normal User
+echo "Enter powerfull password for new-user $USERN"
+useradd -mUG wheel,users,games,power,optical,storage,audio,video -s /bin/bash "$USERN"
+until passwd "$USERN" || ((count++ >= 5)); do echo TryAgain; done
+# Bootloader
+grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Arch
+# Services
+systemctl enable --now NetworkManager
+systemctl enable --now --user pipewire pipewire-pulse wireplumber
+EOF
+
+	# Chroot script
+	arch-chroot /mnt bash /chroot.sh
 }
 
 deskenv() {
