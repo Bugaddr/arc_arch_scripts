@@ -3,151 +3,193 @@
 ### EXPORT ###
 # DEFAULT SIZE SUGGESTION
 export BOOTSZ='+512M' && export BOOTNO='1'
-export ROOTSZ='+50G'  && export ROOTNO='2'
-export HOMESZ='0'     && export HOMENO='3'
+export ROOTSZ='+50G' && export ROOTNO='2'
+export HOMESZ='0' && export HOMENO='3'
 
 ### FUNCTIONS ###
 br() { for ((i = 1; i <= $(tput cols); i++)); do echo -n -; done; }
 
 tablesize() {
-    br
-    echo "$D2E$BOOTNO BOOT = $BOOTSZ"
-    echo "$D2E$ROOTNO ROOT = $ROOTSZ"
-    echo "$D2E$HOMENO HOME = $HOMESZ"
-    br
+	br
+	echo "$D2E$BOOTNO BOOT = $BOOTSZ"
+	echo "$D2E$ROOTNO ROOT = $ROOTSZ"
+	echo "$D2E$HOMENO HOME = $HOMESZ"
+	br
+}
+
+askvars() {
+	br
+	echo -e 'Use only small character without symbol\n'
+	read -rep 'Enter new Username: ' -i 'user' USERN
+	read -rep 'Enter new Hostname: ' -i 'host' HNAME
+	read -rep 'Enter new Timezone: ' -i 'Asia/Kolkata' TZONE
+	br
+	echo -e "Username = $USERN\nHostname = $HNAME\nTimezone = $TZONE\n"
+	read -rep 'Is above data correct? [Y/N]: ' DATAYN
+	if [[ $DATAYN =~ ^[Yy]$ ]]; then br; else
+		br
+		clear
+		UHOST
+	fi
 }
 
 #### STEPS ###
 postinstall() {
-    timedatectl set-ntp true
-    pacman -Syy
+	timedatectl set-ntp true
+	pacman -Syy
 }
 
 partition() {
-    read -rp "Which drive you want to partition (e.g: /dev/sda): " D2E
-    br
-    echo '1. Create New or Edit old table'
-    echo '2. Skip partitioning [Use old table]'
-    read -rp ': ' SOPT
-    if [[ $SOPT == '1' ]]; then
-        clear && echo 'Suggestion for table:' && tablesize
-        read -rp 'Want to edit   [Y/N]: ' FSOK
-        if [[ $FSOK == 'y' ]] || [[ $FSOK == 'Y' ]]; then
-            br
-            echo -e '0 = Use all free space\nG = Gb\nM = Mb\nCtrl+C For Default' && br
-            echo "Enter Size For /Boot | Default= $BOOTSZ"
-            read -re -i "$BOOTSZ" BOOTSZ
-            br
-            echo "Enter Size For /Root | Default= $ROOTSZ"
-            read -re -i "$ROOTSZ" ROOTSZ
-            br
-            echo "Enter Size For /Home | Default= $HOMESZ"
-            read -re -i "$HOMESZ" HOMESZ
-        fi
-        clear
-        br
-        tablesize
-        br
-        lsblk
-        br
-        read -rp 'Save table [Y] or Edit with cgdisk [N] ?: ' FSOK
-        if [[ $FSOK =~ ^[Yy]$ ]]; then
-            # Make table [num:start_block:size] [0=default start]
-            sgdisk -Z "$D2E"
-            sgdisk -a 2048 -o "$DRIVE2EDIT"
-            sgdisk --align-end --new "$BOOTNO":0:"$BOOTSZ" --typecode "$BOOTNO":ef00 --change-name "$BOOTNO":"BOOT" "$D2E"
-            sgdisk --align-end --new "$ROOTNO":0:"$ROOTSZ" --typecode "$ROOTNO":8300 --change-name "$ROOTNO":"ROOT" "$D2E"
-            sgdisk --align-end --new "$HOMENO":0:"$HOMESZ" --typecode "$HOMENO":8300 --change-name "$HOMENO":"HOME" "$D2E"
-        else
-            clear
-            cgdisk "$D2E"
-        fi
-        # Write table
-        sgdisk -p "$D2E"
-        partprobe "$D2E"
-    elif [[ $SOPT == '2' ]]; then
-        true
-    else
-        exit
-    fi
+	read -rp "Which drive you want to partition (e.g: /dev/sda): " D2E
+	br
+	echo '1. Create New or Edit old table'
+	echo '2. Skip partitioning [Use old table]'
+	read -rp ': ' SOPT
+	if [[ $SOPT == '1' ]]; then
+		clear && echo 'Suggestion for table:' && tablesize
+		read -rp 'Want to edit   [Y/N]: ' FSOK
+		if [[ $FSOK == 'y' ]] || [[ $FSOK == 'Y' ]]; then
+			br
+			echo -e '0 = Use all free space\nG = Gb\nM = Mb\nCtrl+C For Default' && br
+			echo "Enter Size For /Boot | Default= $BOOTSZ"
+			read -re -i "$BOOTSZ" BOOTSZ
+			br
+			echo "Enter Size For /Root | Default= $ROOTSZ"
+			read -re -i "$ROOTSZ" ROOTSZ
+			br
+			echo "Enter Size For /Home | Default= $HOMESZ"
+			read -re -i "$HOMESZ" HOMESZ
+		fi
+		clear
+		br
+		tablesize
+		br
+		lsblk
+		br
+		read -rp 'Save table [Y] or Edit with cgdisk [N] ?: ' FSOK
+		if [[ $FSOK =~ ^[Yy]$ ]]; then
+			# Make table [num:start_block:size] [0=default start]
+			sgdisk -Z "$D2E"
+			sgdisk -a 2048 -o "$DRIVE2EDIT"
+			sgdisk --align-end --new "$BOOTNO":0:"$BOOTSZ" --typecode "$BOOTNO":ef00 --change-name "$BOOTNO":"BOOT" "$D2E"
+			sgdisk --align-end --new "$ROOTNO":0:"$ROOTSZ" --typecode "$ROOTNO":8300 --change-name "$ROOTNO":"ROOT" "$D2E"
+			sgdisk --align-end --new "$HOMENO":0:"$HOMESZ" --typecode "$HOMENO":8300 --change-name "$HOMENO":"HOME" "$D2E"
+		else
+			clear
+			cgdisk "$D2E"
+		fi
+		# Write table
+		sgdisk -p "$D2E"
+		partprobe "$D2E"
+	elif [[ $SOPT == '2' ]]; then
+		true
+	else
+		exit
+	fi
 }
 
 mounter() {
-    # Root
-    clear
-    lsblk
-    br
-    read -rp 'Which is your ROOT partition: ' ROOTP
-    mkfs.ext4 "$ROOTP"
-    mount --mkdir -o 'defaults,noatime' "$ROOTP" /mnt
-    # Home
-    clear
-    lsblk
-    br
-    read -rp 'Do you want to mount seperate home partition [y/N]: ' RESPH
-    if [[ $RESPH =~ ^[Yy]$ ]]; then
-        read -rp 'Which is your HOME partition: ' HOMEP
-        #	read -rp 'Do you want to **FORMAT** /home partition [Y/N]: ' RESPRMH
-        #	if [[ $RESPRMH =~ ^[Yy]$ ]]; then
-        #		sleep 5
-        #		mkfs.ext4 "$HOMEP"
-        #	fi
-        mount --mkdir -o 'defaults,noatime,nosuid,nodev' "$HOMEP" /mnt/home
-    fi
-    # Boot
-    clear
-    lsblk
-    br
-    read -rp 'Which is your BOOT partition: ' BOOTP
-    mkfs.fat -F32 "$BOOTP"
-    mount --mkdir -o 'defaults,noatime,nosuid,nodev' "$BOOTP" /mnt/boot/efi
+	# Root
+	clear
+	lsblk
+	br
+	read -rp 'Which is your ROOT partition: ' ROOTP
+	mkfs.ext4 "$ROOTP"
+	mount --mkdir -o 'defaults,noatime' "$ROOTP" /mnt
+	# Home
+	clear
+	lsblk
+	br
+	read -rp 'Do you want to mount seperate home partition [y/N]: ' RESPH
+	if [[ $RESPH =~ ^[Yy]$ ]]; then
+		read -rp 'Which is your HOME partition: ' HOMEP
+		#	read -rp 'Do you want to **FORMAT** /home partition [Y/N]: ' RESPRMH
+		#	if [[ $RESPRMH =~ ^[Yy]$ ]]; then
+		#		sleep 5
+		#		mkfs.ext4 "$HOMEP"
+		#	fi
+		mount --mkdir -o 'defaults,noatime,nosuid,nodev' "$HOMEP" /mnt/home
+	fi
+	# Boot
+	clear
+	lsblk
+	br
+	read -rp 'Which is your BOOT partition: ' BOOTP
+	mkfs.fat -F32 "$BOOTP"
+	mount --mkdir -o 'defaults,noatime,nosuid,nodev' "$BOOTP" /mnt/boot/efi
 }
 
 base() {
-    # Base
-    pacstrap /mnt base base-devel linux-firmware linux linux-headers
-    # Imp
-    pacstrap /mnt xorg-server networkmanager bluez pipewire{,-pulse,-jack,-alsa} wireplumber grub efibootmgr sudo nano git
-    # Generate Fstab
-    genfstab -U /mnt >/mnt/etc/fstab
+	# Base
+	pacstrap /mnt base base-devel linux-firmware linux linux-headers
+	# Imp
+	pacstrap /mnt xorg-server networkmanager bluez pipewire{,-pulse,-jack,-alsa} wireplumber grub efibootmgr sudo nano git
+	# Generate Fstab
+	genfstab -U /mnt >/mnt/etc/fstab
 }
 
 chroot() {
-    # Execute chroot script
-    curl -sL https://raw.githubusercontent.com/Jrchintu/Arch/main/chroot -o /mnt/chroot.sh
-    arch-chroot /mnt bash -c 'chmod a+x /chroot.sh && bash /chroot.sh && exit'
-    rm -rf /mnt/chroot.sh
+	# Ask variables
+	askvars
+	# Timezone & Hwclock
+	arch-chroot /mnt bash -c "ln -sf /usr/share/zoneinfo/$TZONE /etc/localtime && exit"
+	arch-chroot /mnt bash -c 'hwclock --systohc --utc && exit'
+	# Localization
+	arch-chroot /mnt bash -c 'sed -i "s|#en_US.UTF-8|en_US.UTF-8|g" /etc/locale.gen && exit'
+	arch-chroot /mnt bash -c 'locale-gen && exit'
+	arch-chroot /mnt bash -c 'echo -e "LANG=en_US.UTF-8\nLANGUAGE=en_US\nLC_ALL=C" >/etc/locale.conf && exit'
+	# Network configuration
+	arch-chroot /mnt bash -c "echo $HNAME >/etc/hostname && exit"
+	arch-chroot /mnt bash -c "echo -e 127.0.0.1 $HNAME\n::1 $HNAME\n127.0.1.1 $HNAME.localdomain $HNAME >/etc/hosts && exit"
+	# Sudo
+	arch-chroot /mnt bash -c 'if groups | grep sudo >/dev/null; then true; else groupadd sudo; fi && exit'
+	arch-chroot /mnt bash -c 'sed -i "s/^#\s*\(%wheel\s\+ALL=(ALL)\s\+ALL\)/\1/" /etc/sudoers && exit'
+	# Root-User Password
+	br
+	arch-chroot /mnt bash -c 'echo "Enter powerfull password for Root" && exit'
+	arch-chroot /mnt bash -c 'until passwd || ((count++ >= 5)); do echo TryAgain; done && exit'
+	# New-User Password
+	br
+	arch-chroot /mnt bash -c "echo Enter powerfull password for new user $USERN && exit"
+	arch-chroot /mnt bash -c "useradd -mUG wheel,users,games,power,optical,storage,audio,video -s /bin/bash $USERN && exit"
+	arch-chroot /mnt bash -c "until passwd $USERN || ((count++ >= 5)); do echo TryAgain; done && exit"
+	# Bootloader
+	arch-chroot /mnt bash -c 'grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Arch && exit'
+	# Services
+	arch-chroot /mnt bash -c 'systemctl enable --now NetworkManager && exit'
+	arch-chroot /mnt bash -c 'systemctl enable --now --user pipewire pipewire-pulse wireplumber && exit'
+
 }
 
 deskenv() {
-    br && echo -e '1. GNOME\n2. DEEPIN\n3. KDE\n4. XFCE\n5. LXQT\n'
-    read -rp 'Choose a desktop env to install [1-5]: ' DESKTOPENV
-    if [[ $DESKTOPENV == '1' ]]; then
-        pacstrap /mnt gnome
-        arch-chroot /mnt bash -c 'systemctl enable --now gdm && exit'
-    elif [[ $DESKTOPENV == '2' ]]; then
-        pacstrap /mnt deepin lightdm
-        arch-chroot /mnt bash -c 'systemctl enable --now lightdm && exit'
-    elif [[ $DESKTOPENV == '3' ]]; then
-        pacstrap /mnt plasma sddm
-        arch-chroot /mnt bash -c 'systemctl enable --now sddm && exit'
-    elif [[ $DESKTOPENV == '4' ]]; then
-        pacstrap /mnt xfce4 lightdm lightdm-gtk-greeter
-        arch-chroot /mnt bash -c 'systemctl enable --now lightdm && exit'
-    elif [[ $DESKTOPENV == '5' ]]; then
-        pacstrap /mnt lxqt sddm
-        arch-chroot /mnt bash -c 'systemctl enable --now sddm && exit'
-    fi
+	br && echo -e '1. GNOME\n2. DEEPIN\n3. KDE\n4. XFCE\n5. LXQT\n'
+	read -rp 'Choose a desktop env to install [1-5]: ' DESKTOPENV
+	if [[ $DESKTOPENV == '1' ]]; then
+		pacstrap /mnt gnome
+		arch-chroot /mnt bash -c 'systemctl enable --now gdm && exit'
+	elif [[ $DESKTOPENV == '2' ]]; then
+		pacstrap /mnt deepin lightdm
+		arch-chroot /mnt bash -c 'systemctl enable --now lightdm && exit'
+	elif [[ $DESKTOPENV == '3' ]]; then
+		pacstrap /mnt plasma sddm
+		arch-chroot /mnt bash -c 'systemctl enable --now sddm && exit'
+	elif [[ $DESKTOPENV == '4' ]]; then
+		pacstrap /mnt xfce4 lightdm lightdm-gtk-greeter
+		arch-chroot /mnt bash -c 'systemctl enable --now lightdm && exit'
+	elif [[ $DESKTOPENV == '5' ]]; then
+		pacstrap /mnt lxqt sddm
+		arch-chroot /mnt bash -c 'systemctl enable --now sddm && exit'
+	fi
 }
 
 unmount() {
-    sync && wait
-    umount -fv /mnt/home && wait
-    umount -fv /mnt/boot/efi && wait
-    umount -fv /mnt && wait
-    swapoff -av && wait
-    lsblk && br && read -rp 'Do you want to reboot [Y/N]: ' REBOOTYN
-    if [ "$REBOOTYN" = 'y' ] || [ "$REBOOTYN" = 'Y' ]; then reboot; fi
+	sync && wait
+	umount -fv /mnt/home && wait
+	umount -fv /mnt/boot/efi && wait
+	umount -fv /mnt && wait
+	swapoff -av && wait
+	lsblk && br && read -rp 'Do you want to reboot [Y/N]: ' REBOOTYN
+	if [ "$REBOOTYN" = 'y' ] || [ "$REBOOTYN" = 'Y' ]; then reboot; fi
 }
 
 ### START ###
@@ -168,6 +210,6 @@ read -rp 'Enter the number of step [1-6]: ' stepno
 array=(postinstall partition mounter base chroot deskenv unmount)
 STEPNO=$((STEPNO - 1))
 while [ $STEPNO -lt ${#array[*]} ]; do
-    ${array[$stepno]}
-    STEPNO=$((STEPNO + 1))
+	${array[$stepno]}
+	STEPNO=$((STEPNO + 1))
 done
