@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+# Install required pkgs
+pacman -S --needed wine wine-mono winetricks
+paru -S --needed vkd3d-proton-bin dxvk-bin
+
+# Setup vkd3d
+setup_vkd3d_proton install
+
+# Setup dxvk
+setup_dxvk install
+
+# Unregister exesting wine association
+rm -f ~/.local/share/applications/wine-extension*.desktop
+rm -f ~/.local/share/icons/hicolor/*/*/application-x-wine-extension*
+rm -f ~/.local/share/applications/mimeinfo.cache
+rm -f ~/.local/share/mime/packages/x-wine*
+rm -f ~/.local/share/mime/application/x-wine-extension*
+update-desktop-database ~/.local/share/applications
+update-mime-database ~/.local/share/mime/
+
+# Prevent Wine from creating filetype associations
+wine reg add "HKEY_CURRENT_USER\Software\Wine\FileOpenAssociations" /v Enable /d N

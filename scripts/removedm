@@ -1,0 +1,7 @@
+#!/usr/bin
+
+# XFCE Uninstall
+pacman -Rns gnome xfce4 lightdm lightdm-gtk-greeter
+
+# KDE Uninstall
+pacman -Rns plasma sddm
