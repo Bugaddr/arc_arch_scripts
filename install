@@ -125,7 +125,7 @@ base() {
 	# Imp
 	pacstrap /mnt xorg-server networkmanager bluez pipewire{,-pulse,-jack,-alsa} wireplumber grub efibootmgr sudo nano git
 	# Generate Fstab
-	genfstab -U /mnt >/mnt/etc/fstab
+	genfstab -U /mnt >>/mnt/etc/fstab
 }
 
 chroot() {
