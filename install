@@ -24,7 +24,7 @@ postinstall() {
 }
 
 partition() {
-	read -rp "Which drive you want to partition (e.g: /dev/sda): " D2E
+	read -rp 'Which drive you want to partition (e.g: /dev/sda): ' D2E
 	br
 	echo '1. Create New or Edit old table'
 	echo '2. Skip partitioning [Use old table]'
@@ -74,17 +74,13 @@ partition() {
 
 mounter() {
 	# Root
-	clear
-	lsblk
-	br
+	clear && lsblk && br
 	read -rp 'Which is your ROOT partition: ' ROOTP
 	mkfs.ext4 "$ROOTP"
 	mount --mkdir -o 'defaults,noatime' "$ROOTP" /mnt
 	# Home
-	clear
-	lsblk
-	br
-	read -rp 'Do you want to mount seperate home partition [y/N]: ' RESPH
+	clear && lsblk && br
+	read -rp 'Do you want to mount seperate home partition [Y/N]: ' RESPH
 	if [[ $RESPH =~ ^[Yy]$ ]]; then
 		read -rp 'Which is your HOME partition: ' HOMEP
 		#	read -rp 'Do you want to **FORMAT** /home partition [Y/N]: ' RESPRMH
@@ -95,9 +91,7 @@ mounter() {
 		mount --mkdir -o 'defaults,noatime,nosuid,nodev' "$HOMEP" /mnt/home
 	fi
 	# Boot
-	clear
-	lsblk
-	br
+	clear && lsblk && br
 	read -rp 'Which is your BOOT partition: ' BOOTP
 	mkfs.fat -F32 "$BOOTP"
 	mount --mkdir -o 'defaults,noatime,nosuid,nodev' "$BOOTP" /mnt/boot/efi
@@ -105,7 +99,7 @@ mounter() {
 
 base() {
 	# Base
-	pacstrap /mnt base base-devel linux-firmware linux linux-headers
+	pacstrap /mnt base linux linux-headers linux-firmware base-devel
 	# Imp
 	pacstrap /mnt xorg-server networkmanager bluez pipewire{,-pulse,-jack,-alsa} wireplumber grub efibootmgr sudo nano git
 	# Generate Fstab
@@ -113,7 +107,7 @@ base() {
 }
 
 chroot() {
-	cat <<EOF >>/mnt/chroot.sh
+	cat <<EOF >/mnt/chroot.sh
 #!/usr/bin/env bash
 askvars() {
 	echo -e 'Use only small character without symbol\n'
@@ -182,13 +176,15 @@ deskenv() {
 }
 
 unmount() {
+	lsblk && br && read -rp 'Do you want to unmount & reboot [Y/N]: ' REBOOTYN
+	if [ "$REBOOTYN" = 'y' ] || [ "$REBOOTYN" = 'Y' ]; then
 	sync && wait
 	umount -fv /mnt/home && wait
 	umount -fv /mnt/boot/efi && wait
 	umount -fv /mnt && wait
 	swapoff -av && wait
-	lsblk && br && read -rp 'Do you want to reboot [Y/N]: ' REBOOTYN
-	if [ "$REBOOTYN" = 'y' ] || [ "$REBOOTYN" = 'Y' ]; then reboot; fi
+	reboot
+	fi
 }
 
 ### START ###
@@ -200,7 +196,7 @@ echo -e '############################\n'
 echo -e '1. Post install stuff'
 echo -e '2. Partition disk'
 echo -e '3. Format & mount'
-echo -e '4. Base pkgs'
+echo -e '4. Base'
 echo -e '5. Chroot'
 echo -e '6. Desktop env'
 echo -e '7. Unmount & reboot\n'
