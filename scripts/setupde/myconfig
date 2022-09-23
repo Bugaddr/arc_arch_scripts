@@ -1,45 +1,31 @@
 #!/usr/bin/env bash
 clear && LC_ALL=C && LANG=C
 
-# Imp pkgs #ttf-lato ttf-fira-code inter-font
-pacman -S alacritty ttf-jetbrains-mono inter-font man lm_sensors thermald ufw x86_energy_perf_policy gnome-keyring reflector
+# Disable broken UP key [Need xorg-xinit]
+mkdir -pv /etc/X11/Xmodmap
+echo 'keycode 98 = NoSymbol' >/etc/X11/Xmodmap/Keyboard
 
-# Desktop Env extras
-br && echo -e 'Choose a Desktop Environment to install: \n'
-echo -e '1. GNOME \n2. DEEPIN \n3. KDE \n4. XFCE \n5. LXQT'
-read -rp "DE[1-5]: " DESKTOPENV
-if [[ $DESKTOPENV == '1' ]]; then
-    pacstrap /mnt gnome-tweaks
-elif [[ $DESKTOPENV == '2' ]]; then
-    arch-chroot /mnt bash -c 'echo do-nothing && exit'
-elif [[ $DESKTOPENV == '3' ]]; then
-    arch-chroot /mnt bash -c "balooctl purge && balooctl disable && exit"
-elif [[ $DESKTOPENV == '4' ]]; then
-    pacstrap /mnt gtk-engine-murrine accountsservice gtk-engines xfce4-screenshooter papirus-icon-theme \
-        xfce4-whiskermenu-plugin xfce4-pulseaudio-plugin xfce4-battery-plugin network-manager-applet \
-        gvfs gvfs-mtp mtpfs thunar-media-tags-plugin accountsservice xdg-desktop-portal
-    sed -i 's|#greeter-hide-users=false|greeter-hide-users=true|g' /mnt/etc/lightdm/lightdm.conf
-elif [[ $DESKTOPENV == '5' ]]; then
-    pacstrap /mnt network-manager-applet xdg-utils
-fi
-
-# Pacman
-pacman-key --init
-pacman-key --populate archlinux
+# Pacman [Need reflector]
 reflector --latest 10 --sort rate --verbose --protocol https --save /etc/pacman.d/mirrorlist
 sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
 sed -i 's|#Color|Color|g' /etc/pacman.conf
 sed -i 's|#VerbosePkgLists|VerbosePkgLists|g' /etc/pacman.conf
+sed -i 's|#ParallelDownloads|ParallelDownloads|g' /etc/pacman.conf
 
-# Enable services
-systemctl enable --now fstrim.timer thermald ufw
+# Journald
+sed -i 's/#SystemMaxUse=/SystemMaxUse=200M/g' /etc/systemd/journald.conf
+journalctl --vacuum-size=1B
 
-# Firewall
+# Fstrim
+systemctl enable --now fstrim.timer
+
+# Firewall [Need ufw]
+systemctl enable --now ufw
 ufw default deny incoming
 ufw default allow outgoing
 ufw enable
 
-# Nano
+# Nano [Need nano]
 sed -i 's|# include|include|' /etc/nanorc
 
 # Fix touchpad
@@ -56,20 +42,20 @@ passwd -l root
 
 # SwapFile
 if [ -e /swapfile ]; then echo '/swapfile already exists, skiping'; else
-    dd if=/dev/zero of=/swapfile count=6144 bs=1M status=progress
-    chmod -R 600 /swapfile
-    echo -e '\n# Swap\n/swapfile swap swap defaults 0 0' >>/etc/fstab
-    mkswap /swapfile && swapon /swapfile
+	dd if=/dev/zero of=/swapfile count=6144 bs=1M status=progress
+	chmod -R 600 /swapfile
+	echo -e '\n# Swap\n/swapfile swap swap defaults 0 0' >>/etc/fstab
+	mkswap /swapfile && swapon /swapfile
 fi
 
 # Hibernation [Edit script if system is encrypted]
 br && read -rp 'Do you want to enable hibernation support? [Y/N]: ' HIBERYN
 if [[ ${HIBERYN} =~ ^[Yy]$ ]]; then
-    sed -i "s|HOOKS=(base.*|HOOKS=(base udev autodetect modconf block filesystems keyboard resume fsck)|g" /etc/mkinitcpio.conf
-    ROOTUUID="$(findmnt -no UUID -T /swapfile)"
-    SWAPOFFSET="$(filefrag -v /swapfile | awk '{ if($1=="0:"){print substr($4, 1, length($4)-2)} }')"
-    TEMPCMDL="GRUB_CMDLINE_LINUX_DEFAULT=\"resume=UUID=$ROOTUUID resume_offset=$SWAPOFFSET\""
-    sed -i "s|GRUB_CMDLINE_LINUX_DEFAULT=.*|$TEMPCMDL|g" /etc/default/grub
+	sed -i "s|HOOKS=(base.*|HOOKS=(base udev autodetect modconf block filesystems keyboard resume fsck)|g" /etc/mkinitcpio.conf
+	ROOTUUID="$(findmnt -no UUID -T /swapfile)"
+	SWAPOFFSET="$(filefrag -v /swapfile | awk '{ if($1=="0:"){print substr($4, 1, length($4)-2)} }')"
+	TEMPCMDL="GRUB_CMDLINE_LINUX_DEFAULT=\"resume=UUID=$ROOTUUID resume_offset=$SWAPOFFSET\""
+	sed -i "s|GRUB_CMDLINE_LINUX_DEFAULT=.*|$TEMPCMDL|g" /etc/default/grub
 else exit; fi
 
 # Use lz4 compression
@@ -78,7 +64,7 @@ sed -i 's|#COMPRESSION="lz4"|COMPRESSION="lz4"|g' /etc/mkinitcpio.conf
 ## Blacklist junk kernel modules.
 read -rp "Blacklist some Junk kernel modules (y/n) " blacklistyn
 if [ "${blacklistyn}" = "y" ]; then
-    echo -e '# iTCO_wdt: disables watchdog
+	echo -e '# iTCO_wdt: disables watchdog
 install iTCO_wdt /bin/true
 install iTCO_vendor_support /bin/true
 # joydev: disables joystick [Can be enabled with `modprobe joydev` in runtime for gaming]
@@ -89,12 +75,12 @@ install mousedev /bin/true
 install mac_hid /bin/true' >>/etc/modprobe.d/junk.conf
 fi
 
-# Paru
+# Paru [Need git]
 br && read -rp 'Do you want to install paru? [Y/N]: ' PARUYN
 if [[ $PARUYN =~ ^[Yy]$ ]]; then
-    if [ -z "$USERN" ]; then read -rp 'What is your USERNAME: ' USERN; else true; fi
-    sudo -H -u "$USERN" bash -c 'rm -rf $HOME/paru; git clone --depth=1 https://aur.archlinux.org/paru-bin.git $HOME/paru'
-    sudo -H -u "$USERN" bash -c 'chmod -R 777 $HOME/paru; cd $HOME/paru; makepkg -sic --noconfirm; rm -rf $HOME/paru'
+	if [ -z "$USERN" ]; then read -rp 'What is your USERNAME: ' USERN; else true; fi
+	sudo -H -u "$USERN" bash -c 'rm -rf $HOME/paru; git clone --depth=1 https://aur.archlinux.org/paru-bin.git $HOME/paru'
+	sudo -H -u "$USERN" bash -c 'chmod -R 777 $HOME/paru; cd $HOME/paru; makepkg -sic --noconfirm; rm -rf $HOME/paru'
 fi
 
 # Better I/O scheduler
@@ -113,12 +99,15 @@ echo "options snd_hda_intel power_save=1" >/etc/modprobe.d/audio_powersave.conf
 # SATA powersaver
 echo 'ACTION=="add", SUBSYSTEM=="scsi_host", KERNEL=="host*", ATTR{link_power_management_policy}="med_power_with_dipm"' >/etc/udev/rules.d/hd_power_save.rules
 
-# Fancontrol
+# Fancontrol [Need lm_sensors]
 sensors-detect --auto
 sensors
 pwmconfig
 systemctl enable --now fancontrol
 echo -e '\n# Fix hwmon path change\ncoretemp' >>/etc/modules-load.d/modules.conf
+
+# Thermald
+systemctl enable --now thermald
 
 # Ending
 grub-mkconfig -o /boot/grub/grub.cfg

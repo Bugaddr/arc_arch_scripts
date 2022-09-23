@@ -101,13 +101,15 @@ base() {
 	# Base
 	pacstrap /mnt base linux linux-headers linux-firmware base-devel
 	# Imp
-	pacstrap /mnt xorg-server networkmanager bluez pipewire{,-pulse,-jack,-alsa} wireplumber grub efibootmgr sudo nano git
+	pacstrap /mnt xorg-server networkmanager bluez pipewire{,-pulse,-jack,-alsa} wireplumber grub efibootmgr sudo git
+	# Apps
+	pacstrap /mnt alacritty nano
 	# Generate Fstab
 	genfstab -U /mnt >>/mnt/etc/fstab
 }
 
 chroot() {
-	cat <<EOF >/mnt/chroot.sh
+	cat <<EOF
 #!/usr/bin/env bash
 askvars() {
 	echo -e 'Use only small character without symbol\n'
@@ -147,7 +149,7 @@ grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Arch
 systemctl enable --now NetworkManager
 systemctl enable --now --user pipewire pipewire-pulse wireplumber
 # Self delete
-rm --  "$( readlink -f -- "${BASH_SOURCE[0]:-$0}" 2> '/dev/null'; )";
+rm --  "$(readlink -f -- "${BASH_SOURCE[0]:-$0}" 2>'/dev/null')";
 EOF
 
 	# Chroot script
@@ -178,12 +180,12 @@ deskenv() {
 unmount() {
 	lsblk && br && read -rp 'Do you want to unmount & reboot [Y/N]: ' REBOOTYN
 	if [ "$REBOOTYN" = 'y' ] || [ "$REBOOTYN" = 'Y' ]; then
-	sync && wait
-	umount -fv /mnt/home && wait
-	umount -fv /mnt/boot/efi && wait
-	umount -fv /mnt && wait
-	swapoff -av && wait
-	reboot
+		sync && wait
+		umount -fv /mnt/home && wait
+		umount -fv /mnt/boot/efi && wait
+		umount -fv /mnt && wait
+		swapoff -av && wait
+		reboot
 	fi
 }
 

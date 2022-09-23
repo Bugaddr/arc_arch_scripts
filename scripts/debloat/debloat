@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+# Remove useless pkg
+pacman -Rcnsd rsh-server telnet-server
+
+# Delete old/temp files
+fd -g *.old -x rm -rfv
+fd -g *.tmp -x rm -rfv
+fd -t e -x rm -rfv
+
+# Remove more unneeded packages
+pacman -Qtdq | pacman -Rns -
+pacman -Qqd | pacman -Rsu -
+
+# Lostfiles can beused too

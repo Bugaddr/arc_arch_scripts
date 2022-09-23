@@ -2,46 +2,57 @@
 
 ### GPU DRIVERS
 # nvidia [https://aur.archlinux.org/packages?O=0&SeB=nd&K=390xx&outdated=&SB=p&SO=d&PP=50&submit=Go]
-paru -S nvidia-390xx-{dkms,utils} lib32-nvidia-390xx-utils nvidia-390xx-settings
-curl -L https://github.com/Jrchintu/Arch/raw/main/Config/optimus-manager.conf -o /etc/optimus-manager.conf
+paru -S --needed nvidia-390xx-{dkms,utils} lib32-nvidia-390xx-utils # Nvidia gpu driver
+paru -S --needed nvidia-390xx-settings                              # Nvidia gpu setting
 
 # INTEL
-pacman -S --needed xf86-video-intel
+pacman -S --needed xf86-video-intel # Intel gpu driver
 
 # GPU Switcher
-paru -S optimus-manager bbswitch-dkms acpi_call-dkms
+paru -S --needed optimus-manager bbswitch-dkms acpi_call-dkms
 systemctl enable optimus-manager
 sed -i 's|# Option|Option|g' /etc/optimus-manager/xorg/*-mode/*.conf # Enable default xorg option in optimus-manager configs
 
+########################
 ### OTHER GPU STUFF
-# MESA [Check mesa-amber & lib32-mesa-amber]
-pacman -S --needed mesa lib32-mesa                             # open-source implementation of the OpenGL specification
+# openGL # [Check mesa-amber & lib32-mesa-amber]
+pacman -S --needed mesa lib32-mesa # open-source implementation of the OpenGL specification
+
+# Vulkan # [Verify with vulkaninfo in vulkan-tools]
+pacman -S --needed vulkan-icd-loader lib32-vulkan-icd-loader   # Vulkan Installable Client Driver (ICD) Loader
+pacman -S --needed vulkan-intel lib32-vulkan-intel             # Intel's Vulkan driver
 pacman -S --needed vulkan-mesa-layers lib32-vulkan-mesa-layers # Mesa's Vulkan layers
-pacman -S --needed mesa-vdpau lib32-mesa-vdpau                 # Mesa VDPAU drivers
 
-# VULKAN[Verify with vulkaninfo in vulkan-tools]
-pacman -S --needed vulkan-icd-loader lib32-vulkan-icd-loader # Vulkan Installable Client Driver (ICD) Loader
-pacman -S --needed vulkan-intel lib32-vulkan-intel           # Intel's Vulkan driver
-
+########################
 ### HW VIDEO ACCLERATION
-# VAAPI [check with vainfo in libva-utils package & vdpauinfo]
-pacman -S --needed libva lib32-libva       # Base VAAPI lib
-paru -S --needed libva-intel-driver-hybrid # [Intel] Modified libva-intel-driver,lib32-libva-intel-driver to use with intel-hybrid-codec-driver
-paru -S --needed intel-hybrid-codec-driver # [Intel] For Haswell 8-bit HEVC/h.265 decoding
+# VAAPI [check with vainfo in libva-utils package]
+pacman -S --needed libva lib32-libva                           # VA-API for linux
+pacman -S --needed libva-intel-driver lib32-libva-intel-driver # VA-API driver for intel
+#paru -S --needed libva-intel-driver-hybrid intel-hybrid-codec-driver # Modified libva-intel-driver to support Haswell 8-bit HEVC/h.265 decoding
 
-# VDPAU/VAAPI Translation layers
-pacman -S --needed libva-vdpau-driver # VDPAU-based backend for VA-API
-pacman -S --needed libvdpau-va-gl     # VDPAU driver with OpenGL/VAAPI backend. H.264 only
-#paru -S --needed libva-nvidia-driver       # [Nvidia] CUDA NVDECODE based backend for VAAPI (Need cuda) [Conflict: libva-vdpau-driver]
+# VDPAU  [check with vdpauinfo]
+pacman -S --needed libvdpau lib32-libvdpau
 
-# env var for vdpau & vaapi
+# VDPAU on VAAPI Translation layers
+pacman -S --needed libva-vdpau-driver lib32-libva-vdpau-driver # VDPAU-based backend for VA-API
+pacman -S --needed libvdpau-va-gl                              # VDPAU driver with OpenGL/VAAPI backend. H.264 only
+#paru -S --needed libva-nvidia-driver           # [Nvidia] CUDA NVDECODE based backend for VAAPI (Need cuda) [Conflict: libva-vdpau-driver]
+pacman -S --needed mesa-vdpau lib32-mesa-vdpau # Mesa VDPAU drivers
+
+# Env variable for VDPAU/VAAPI/VULKAN
+echo 'if [[ "$(optimus-manager --print-mode)" =~ 'nvidia' ]]; then
+    export LIBVA_DRIVER_NAME='nvidia' # /usr/lib/dri/${LIBVA_DRIVER_NAME}_drv_video.so
+    export VDPAU_DRIVER='nvidia'      # /usr/lib/vdpau/libvdpau_${VDPAU_DRIVER}.so
+    #export VK_ICD_FILENAMES='/usr/share/vulkan/icd.d/nvidia_icd.json'
+elif [[ "$(optimus-manager --print-mode)" =~ 'integrated' ]]; then
+    export LIBVA_DRIVER_NAME='i965'
+    export VDPAU_DRIVER='va_gl'
+    #export VK_ICD_FILENAMES='/usr/share/vulkan/icd.d/intel_icd.x86_64.json'
+fi' >/etc/profile.d/env.sh
 
 ### INTEL GPU STUFF
-# Enabling Early KMS
-sed -i 's|MODULES=()|MODULES=(i915)|g' /etc/mkinitcpio.conf
-
 # Enable framebuffer compression & Fastboot [For intel gpu >6-gen]
-echo -e 'options i915 enable_fbc=1 fastboot=1' >>/etc/modprobe.d/i915.conf
+echo -e 'options i915 enable_fbc=1 fastboot=1' >/etc/modprobe.d/i915.conf
 
 ### EXTRA LIBS/PKGS FOR GRAPHIC
 paru -S --needed libglvnd lib32-libglvnd # The GL Vendor-Neutral Dispatch library E.g provides libegl
