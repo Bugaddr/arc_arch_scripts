@@ -1,16 +1,22 @@
 #!/usr/bin/env bash
-clear && LC_ALL=C && LANG=C
+
+# Imp pkgs #ttf-lato ttf-fira-code inter-font
+pacman -S alacritty ttf-jetbrains-mono ripgrep fd man lm_sensors thermald ufw
+pacman -S reflector xorg-xinit base-devel
+
+# Extra pkg
+pacman -S x86_energy_perf_policy asp
 
 # Disable broken UP key [Need xorg-xinit]
 mkdir -pv /etc/X11/Xmodmap
-echo 'keycode 98 = NoSymbol' >/etc/X11/Xmodmap/Keyboard
+echo -e 'keycode 98 = NoSymbol\nkeycode 115=' >/etc/X11/Xmodmap/Keyboard
 
 # Pacman [Need reflector]
-reflector --latest 10 --sort rate --verbose --protocol https --save /etc/pacman.d/mirrorlist
 sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
 sed -i 's|#Color|Color|g' /etc/pacman.conf
 sed -i 's|#VerbosePkgLists|VerbosePkgLists|g' /etc/pacman.conf
 sed -i 's|#ParallelDownloads|ParallelDownloads|g' /etc/pacman.conf
+reflector --latest 10 --sort rate --verbose --protocol https --save /etc/pacman.d/mirrorlist
 
 # Journald
 sed -i 's/#SystemMaxUse=/SystemMaxUse=200M/g' /etc/systemd/journald.conf
@@ -28,14 +34,15 @@ ufw enable
 # Nano [Need nano]
 sed -i 's|# include|include|' /etc/nanorc
 
-# Fix touchpad
-TEMPCL='GRUB_CMDLINE_LINUX_DEFAULT="i8042.nopnp=1 nowatchdog nmi_watchdog=0"'
+# Fix touchpad + nowatchdog + no nmi_watchdog
+TEMPCL='GRUB_CMDLINE_LINUX_DEFAULT="i8042.nopnp=1 nowatchdog nmi_watchdog=0 quiet loglevel=0"'
 sed -i "s|GRUB_CMDLINE_LINUX_DEFAULT=.*|$TEMPCL|g" /etc/default/grub
 
 # Grub config
 sed -i 's|GRUB_TIMEOUT=5|GRUB_TIMEOUT=1|g' /etc/default/grub
 sed -i 's|#GRUB_DISABLE_SUBMENU=y|GRUB_DISABLE_SUBMENU=y|g' /etc/default/grub
 sed -i 's|GRUB_DISABLE_RECOVERY=true|GRUB_DISABLE_RECOVERY=false|g' /etc/default/grub
+sed -i 's|#GRUB_DISABLE_OS_PROBER=false|GRUB_DISABLE_OS_PROBER=false|g' /etc/defaut/grub
 
 # Disable root login
 passwd -l root
@@ -49,7 +56,8 @@ if [ -e /swapfile ]; then echo '/swapfile already exists, skiping'; else
 fi
 
 # Hibernation [Edit script if system is encrypted]
-br && read -rp 'Do you want to enable hibernation support? [Y/N]: ' HIBERYN
+clear
+read -rp 'Do you want to enable hibernation support? [Y/N]: ' HIBERYN
 if [[ ${HIBERYN} =~ ^[Yy]$ ]]; then
 	sed -i "s|HOOKS=(base.*|HOOKS=(base udev autodetect modconf block filesystems keyboard resume fsck)|g" /etc/mkinitcpio.conf
 	ROOTUUID="$(findmnt -no UUID -T /swapfile)"
@@ -72,26 +80,26 @@ install joydev /bin/true
 # mousedev: disables PS2 mouse support that my laptop dont have a slot for
 install mousedev /bin/true
 # mac_hid: Apple relatedd stuff so blacklisting this
-install mac_hid /bin/true' >>/etc/modprobe.d/junk.conf
+install mac_hid /bin/true' >/etc/modprobe.d/junk.conf
 fi
 
-# Paru [Need git]
+# Paru [Need git base-devel]
 br && read -rp 'Do you want to install paru? [Y/N]: ' PARUYN
 if [[ $PARUYN =~ ^[Yy]$ ]]; then
-	if [ -z "$USERN" ]; then read -rp 'What is your USERNAME: ' USERN; else true; fi
-	sudo -H -u "$USERN" bash -c 'rm -rf $HOME/paru; git clone --depth=1 https://aur.archlinux.org/paru-bin.git $HOME/paru'
-	sudo -H -u "$USERN" bash -c 'chmod -R 777 $HOME/paru; cd $HOME/paru; makepkg -sic --noconfirm; rm -rf $HOME/paru'
+	git clone --depth=1 https://aur.archlinux.org/paru-bin.git ~/.cache/paru
+	cd ~/.cache/paru
+	makepkg -sic --noconfirm
 fi
 
 # Better I/O scheduler
-cat <<EOF >/etc/udev/rules.d/60-ioschedulers.rules
+echo '
 # set scheduler for NVMe
 ACTION=="add|change", KERNEL=="nvme[0-9]*", ATTR{queue/scheduler}="none"
 # set scheduler for SSD and eMMC
 ACTION=="add|change", KERNEL=="sd[a-z]|mmcblk[0-9]*", ATTR{queue/rotational}=="0", ATTR{queue/scheduler}="mq-deadline"
 # set scheduler for rotating disks
 ACTION=="add|change", KERNEL=="sd[a-z]", ATTR{queue/rotational}=="1", ATTR{queue/scheduler}="bfq"
-EOF
+' >/etc/udev/rules.d/60-ioschedulers.rules
 
 # Enable audio powersave
 echo "options snd_hda_intel power_save=1" >/etc/modprobe.d/audio_powersave.conf

@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 
-# PKG
+# PKG xfce
 pacman -S gtk-engine-murrine accountsservice gtk-engines xfce4-screenshooter papirus-icon-theme \
 	xfce4-whiskermenu-plugin xfce4-pulseaudio-plugin xfce4-battery-plugin network-manager-applet \
 	gvfs gvfs-mtp mtpfs thunar-media-tags-plugin accountsservice xdg-desktop-portal
+
+# PKG EXTRA [for error fix etc]
+pacman -S gnome-keyring
 
 # Lightdm
 sed -i 's|#greeter-hide-users=false|greeter-hide-users=true|g' /etc/lightdm/lightdm.conf

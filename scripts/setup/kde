@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+# PKG for plasma
+pacman -S --needed powerdevil dolphin gwenview plasma-firewall plasma-nm plasma-pa kscreen sddm-kcm kde-gtk-config breeze-gtk

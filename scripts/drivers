@@ -3,13 +3,14 @@
 ### GPU DRIVERS
 # nvidia [https://aur.archlinux.org/packages?O=0&SeB=nd&K=390xx&outdated=&SB=p&SO=d&PP=50&submit=Go]
 paru -S --needed nvidia-390xx-{dkms,utils} lib32-nvidia-390xx-utils # Nvidia gpu driver
-paru -S --needed nvidia-390xx-settings                              # Nvidia gpu setting
+paru -S --needed nvidia-390xx-settings                              # Nvidia gpu setting [OPTIONAL]
 
 # INTEL
-pacman -S --needed xf86-video-intel # Intel gpu driver
+pacman -S --needed xf86-video-intel # Intel gpu driver [Modesetting is better than this]
 
 # GPU Switcher
-paru -S --needed optimus-manager bbswitch-dkms acpi_call-dkms
+pacman -S --needed bbswitch-dkms #acpi_call-dkms
+paru -S --needed optimus-manager
 systemctl enable optimus-manager
 sed -i 's|# Option|Option|g' /etc/optimus-manager/xorg/*-mode/*.conf # Enable default xorg option in optimus-manager configs
 
@@ -36,8 +37,8 @@ pacman -S --needed libvdpau lib32-libvdpau
 # VDPAU on VAAPI Translation layers
 pacman -S --needed libva-vdpau-driver lib32-libva-vdpau-driver # VDPAU-based backend for VA-API
 pacman -S --needed libvdpau-va-gl                              # VDPAU driver with OpenGL/VAAPI backend. H.264 only
-#paru -S --needed libva-nvidia-driver           # [Nvidia] CUDA NVDECODE based backend for VAAPI (Need cuda) [Conflict: libva-vdpau-driver]
-pacman -S --needed mesa-vdpau lib32-mesa-vdpau # Mesa VDPAU drivers
+#paru -S --needed libva-nvidia-driver                          # CUDA NVDECODE based backend for VAAPI (Need cuda) [Conflict: libva-vdpau-driver]
+pacman -S --needed mesa-vdpau lib32-mesa-vdpau                 # Mesa VDPAU drivers
 
 # Env variable for VDPAU/VAAPI/VULKAN
 echo 'if [[ "$(optimus-manager --print-mode)" =~ 'nvidia' ]]; then
@@ -55,16 +56,16 @@ fi' >/etc/profile.d/env.sh
 echo -e 'options i915 enable_fbc=1 fastboot=1' >/etc/modprobe.d/i915.conf
 
 ### EXTRA LIBS/PKGS FOR GRAPHIC
-paru -S --needed libglvnd lib32-libglvnd # The GL Vendor-Neutral Dispatch library E.g provides libegl
+pacman -S --needed libglvnd lib32-libglvnd # The GL Vendor-Neutral Dispatch library E.g provides libegl
 
 ### CPU Microcode
-paru -S intel-ucode
+pacman -S intel-ucode
 
 # EXTRA JUNK
 # adriconf
 
 # SOME INFO
-# https://www.reddit.com/r/archlinux/comments/n5ypqh/eli5_intel_graphic_drivers/
+# CREDIT: https://www.reddit.com/r/archlinux/comments/n5ypqh/eli5_intel_graphic_drivers/
 # D3D = Proprietary 2D & 3D graphic Api for windows
 # openGL = Open source 2D & 3D graphic Api
 # Vulkan = Modern sucessor of openGL & D3D

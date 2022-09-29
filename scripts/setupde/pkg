@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-
-# Imp pkgs #ttf-lato ttf-fira-code inter-font
-pacman -S alacritty ttf-jetbrains-mono inter-font man lm_sensors thermald ufw x86_energy_perf_policy gnome-keyring reflector asp xorg-xinit

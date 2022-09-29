@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-
-# PKG For gtk
-pacman -S appmenu-gtk-module
