@@ -8,21 +8,31 @@ paru -S --needed nvidia-390xx-settings                              # Nvidia gpu
 # INTEL
 pacman -S --needed xf86-video-intel # Intel gpu driver [Modesetting is better than this]
 
-# GPU Switcher
+#######################
+### GPU Switcher
+# Optimus-manager [Remove other switcher & cleanup /etc/X11 & also remove bumblebee]
 pacman -S --needed bbswitch-dkms #acpi_call-dkms
 paru -S --needed optimus-manager
 systemctl enable optimus-manager
 sed -i 's|# Option|Option|g' /etc/optimus-manager/xorg/*-mode/*.conf # Enable default xorg option in optimus-manager configs
+
+# Bumblebee [Remove other switcher & cleanup /etc/X11]
+pacman -S --needed bbswitch-dkms
+pacman -S --needed bumblebee
+pacman -S --needed primus
+systemctl enable bumblebeed
+sed -i 's|#   BusID "PCI:01:00:0"|BusID "PCI:08:00:0"|g' /etc/bumblebee/xorg.conf.nvidia
 
 ########################
 ### OTHER GPU STUFF
 # openGL # [Check mesa-amber & lib32-mesa-amber]
 pacman -S --needed mesa lib32-mesa # open-source implementation of the OpenGL specification
 
-# Vulkan # [Verify with vulkaninfo in vulkan-tools]
+# Vulkan # [Verify with vulkaninfo in vulkan-tools] # Fermi = NoVulkan
 pacman -S --needed vulkan-icd-loader lib32-vulkan-icd-loader   # Vulkan Installable Client Driver (ICD) Loader
 pacman -S --needed vulkan-intel lib32-vulkan-intel             # Intel's Vulkan driver
 pacman -S --needed vulkan-mesa-layers lib32-vulkan-mesa-layers # Mesa's Vulkan layers
+pacman -S --needed vkd3d lib32-vkd3d                           # Direct3D 12 to Vulkan translation library By WineHQ
 
 ########################
 ### HW VIDEO ACCLERATION

@@ -86,6 +86,14 @@ mounter() {
 		mkfs.ext4 "$ROOTP"
 	fi
 	mount --mkdir -o 'defaults,noatime' "$ROOTP" /mnt
+	# Boot
+	clear && lsblk && br
+	read -rp 'Which is your BOOT partition: ' BOOTP
+	read -rep 'Format BOOT [Y/N]: ' BOOTYN
+	if [[ $BOOTYN =~ ^([Yy][Ee][Ss]|[Yy])$ ]]; then
+		mkfs.fat -F32 "$BOOTP"
+	fi
+	mount --mkdir -o 'defaults,noatime,nosuid,nodev' "$BOOTP" /mnt/boot/efi
 	# Home
 	clear && lsblk && br
 	read -rp 'Do you want to mount seperate home partition [Y/N]: ' RESPH
@@ -98,21 +106,13 @@ mounter() {
 		fi
 		mount --mkdir -o 'defaults,noatime,nosuid,nodev' "$HOMEP" /mnt/home
 	fi
-	# Boot
-	clear && lsblk && br
-	read -rp 'Which is your BOOT partition: ' BOOTP
-	read -rep 'Format BOOT [Y/N]: ' BOOTYN
-	if [[ $BOOTYN =~ ^([Yy][Ee][Ss]|[Yy])$ ]]; then
-		mkfs.fat -F32 "$BOOTP"
-	fi
-	mount --mkdir -o 'defaults,noatime,nosuid,nodev' "$BOOTP" /mnt/boot/efi
 }
 
 base() {
 	# Base
-	pacstrap /mnt --needed base linux linux-firmware intel-ucode
+	pacstrap /mnt --needed base linux-lts linux-firmware intel-ucode
 	# Extra
-	pacstrap /mnt --needed xorg networkmanager bluez pipewire{,-pulse,-jack,-alsa} wireplumber \
+	pacstrap /mnt --needed xorg-server networkmanager bluez pipewire{,-pulse,-jack} wireplumber \
 		grub efibootmgr sudo git nano
 }
 
@@ -138,9 +138,9 @@ chroot() {
 	arch-chroot /mnt bash -c "ln -sf /usr/share/zoneinfo/$TZONE /etc/localtime"
 	arch-chroot /mnt bash -c 'hwclock --systohc --utc'
 	# Localization
-	sed -i 's|#en_US.UTF-8|en_US.UTF-8|g' /mnt/etc/locale.gen
+	sed -i 's|#en_IN.UTF-8|en_IN.UTF-8|g' /mnt/etc/locale.gen
 	arch-chroot /mnt bash -c 'locale-gen'
-	echo -e 'LANG=en_US.UTF-8\nLANGUAGE=en_US\nLC_ALL=C' >/mnt/etc/locale.conf
+	echo -e 'LANG=en_IN.UTF-8\nLANGUAGE=en_IN\nLC_ALL=C' >/mnt/etc/locale.conf
 	# Network configuration
 	echo "$HNAME" >/mnt/etc/hostname
 	echo -e "127.0.0.1 $HNAME\n::1 $HNAME\n127.0.1.1 $HNAME.localdomain $HNAME" >/mnt/etc/hosts
@@ -148,12 +148,12 @@ chroot() {
 	arch-chroot /mnt bash -c 'if groups | grep sudo >/dev/null; then true; else groupadd sudo; fi'
 	sed -i 's/^#\s*\(%wheel\s\+ALL=(ALL:ALL)\s\+ALL\)/\1/' /mnt/etc/sudoers
 	# Root User
-	echo 'Enter powerfull password for Root'
-	arch-chroot /mnt bash -c 'until passwd || ((count++ >= 5)); do echo TryAgain; done'
+	br && echo 'Enter powerfull password for Root'
+	arch-chroot /mnt bash -c 'until passwd || ((count++ >= 5)); do echo Try-Again; done'
 	# Normal User
-	echo "Enter powerfull password for new-user $USERN"
+	br && echo "Enter powerfull password for new-user $USERN"
 	arch-chroot /mnt bash -c "useradd -mUG wheel,users,games,power,optical,storage,audio,video -s /bin/bash $USERN"
-	arch-chroot /mnt bash -c 'until passwd $USERN || ((count++ >= 5)); do echo TryAgain; done'
+	arch-chroot /mnt bash -c 'until passwd $USERN || ((count++ >= 5)); do echo Try-Again; done'
 	# Bootloader
 	arch-chroot /mnt bash -c 'grub-install --target=x86_64-efi --efi-directory=/mnt/boot/efi --bootloader-id=Arch'
 	arch-chroot /mnt bash -c 'grub-mkconfig -o /boot/grub/grub.cfg'

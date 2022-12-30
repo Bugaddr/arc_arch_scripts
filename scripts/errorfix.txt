@@ -1,9 +1,0 @@
-# Open ACPI failed (/var/run/acpid.socket) (No such file or directory) in ~/.local/share/xorg.0.log
-# Not necessary can be fixed in corg config https://wiki.archlinux.org/title/NVIDIA/Tips_and_tricks#Listening_to_ACPI_events
-pacman -S acpid
-systemctl enable acpid
-
-# cfg80211: failed to load regulatory.db in dmesg
-# For legal purposes, not necessary
-pacman -S wireless-regdb
-iw reg set IN

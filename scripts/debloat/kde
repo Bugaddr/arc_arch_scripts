@@ -9,7 +9,7 @@ pacman -Rcnsd oxygen plasma-vault plasma-workspace-wallpapers kdeplasma-addons p
 
 # kde-applications junk
 pacman -Rcnsd kate kate5-data kate-data kwrite kwrited kmail akonadi-server akondi juk dragonplayer k3b k3b-data k3b-i18n konqueror \
-	akregator 
+	akregator
 
 # ungrouped kde junk
 pacman -Rcnsd kaccounts-providers kaccounts-integration network-manager-sstp

@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 
-# Imp pkgs #ttf-lato ttf-fira-code inter-font
-pacman -S alacritty ttf-jetbrains-mono ripgrep fd man lm_sensors thermald ufw
+# Imp pkgs
+pacman -S alacritty ripgrep fd man lm_sensors thermald ufw r8168-lts r8168
 pacman -S reflector xorg-xinit base-devel
+pacman -S macchanger
+# Font pkg #ttf-lato ttf-fira-code inter-font
+paru -S ttf-jetbrains-mono ttf-apple-emoji
 
 # Extra pkg
-pacman -S x86_energy_perf_policy asp
+pacman -S x86_energy_perf_policy asp vlc kate
 
 # Disable broken UP key [Need xorg-xinit]
 mkdir -pv /etc/X11/Xmodmap
@@ -19,11 +22,12 @@ sed -i 's|#ParallelDownloads|ParallelDownloads|g' /etc/pacman.conf
 reflector --latest 10 --sort rate --verbose --protocol https --save /etc/pacman.d/mirrorlist
 
 # Journald
-sed -i 's/#SystemMaxUse=/SystemMaxUse=200M/g' /etc/systemd/journald.conf
-journalctl --vacuum-size=1B
+sed -i 's|#SystemMaxUse=|SystemMaxUse=50M|g' /etc/systemd/journald.conf
+systemctl mask systemd-journald-audit.socket
 
-# Fstrim
-systemctl enable --now fstrim.timer
+# NetworkManager # Disable connectivity check
+echo '[connectivity]
+enabled=false' >/etc/NetworkManager/conf.d/20-connectivity.conf
 
 # Firewall [Need ufw]
 systemctl enable --now ufw
@@ -35,11 +39,13 @@ ufw enable
 sed -i 's|# include|include|' /etc/nanorc
 
 # Fix touchpad + nowatchdog + no nmi_watchdog
-TEMPCL='GRUB_CMDLINE_LINUX_DEFAULT="i8042.nopnp=1 nowatchdog nmi_watchdog=0 quiet loglevel=0"'
+TEMPCL='GRUB_CMDLINE_LINUX_DEFAULT="i8042.nopnp=1 nowatchdog nmi_watchdog=0 quiet loglevel=0 audit=0"'
 sed -i "s|GRUB_CMDLINE_LINUX_DEFAULT=.*|$TEMPCL|g" /etc/default/grub
 
 # Grub config
-sed -i 's|GRUB_TIMEOUT=5|GRUB_TIMEOUT=1|g' /etc/default/grub
+sed -i 's|GRUB_TIMEOUT=5|GRUB_TIMEOUT=0|g' /etc/default/grub
+sed -i 's|#GRUB_SAVEDEFAULT=true|GRUB_SAVEDEFAULT=true|g' /etc/default/grub
+sed -i 's|GRUB_DEFAULT=0|GRUB_DEFAULT=saved|g' /etc/default/grub
 sed -i 's|#GRUB_DISABLE_SUBMENU=y|GRUB_DISABLE_SUBMENU=y|g' /etc/default/grub
 sed -i 's|GRUB_DISABLE_RECOVERY=true|GRUB_DISABLE_RECOVERY=false|g' /etc/default/grub
 sed -i 's|#GRUB_DISABLE_OS_PROBER=false|GRUB_DISABLE_OS_PROBER=false|g' /etc/defaut/grub
@@ -83,12 +89,28 @@ install mousedev /bin/true
 install mac_hid /bin/true' >/etc/modprobe.d/junk.conf
 fi
 
+# Disable r8169 to use r8168 # https://askubuntu.com/questions/1052971/r8168-r8169-realtek-driver-module-troubles
+# Need r8168 or r8168-lts pkg
+echo 'install r8169 /bin/true' /etc/modprobe.d/blacklist.conf
+
+# Ipv6 privacy
+sysctl -w net.ipv6.conf.all.use_tempaddr=2
+sysctl -w net.ipv6.conf.default.use_tempaddr=2
+
+# Randomize MAC address with networkmanager.
+cat <<EOF >/etc/NetworkManager/conf.d/rand_mac.conf
+[connection-mac-randomization]
+ethernet.cloned-mac-address=random
+wifi.cloned-mac-address=random
+EOF
+
 # Paru [Need git base-devel]
 br && read -rp 'Do you want to install paru? [Y/N]: ' PARUYN
 if [[ $PARUYN =~ ^[Yy]$ ]]; then
 	git clone --depth=1 https://aur.archlinux.org/paru-bin.git ~/.cache/paru
 	cd ~/.cache/paru
 	makepkg -sic --noconfirm
+	sed -i 's|#NewsOnUpgrade|NewsOnUpgrade|g' /etc/paru.conf
 fi
 
 # Better I/O scheduler
@@ -116,6 +138,9 @@ echo -e '\n# Fix hwmon path change\ncoretemp' >>/etc/modules-load.d/modules.conf
 
 # Thermald
 systemctl enable --now thermald
+
+# Bluetooth
+systemctl enable --now bluetooth
 
 # Ending
 grub-mkconfig -o /boot/grub/grub.cfg
