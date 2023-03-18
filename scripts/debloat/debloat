@@ -4,7 +4,7 @@
 pacman -Rcnsd rsh-server telnet-server
 
 # Debloat xorg
-pacman -Qqge xorg | grep -v xorg-server | grep -v xf86-video-vesa | grep -v xorg-mkfontscale | grep -v xorg-font-util | sudo pacman -Rnsd -
+pacman -Qqge xorg | grep -vxe xorg-server -e xorg-mkfontscale -e xorg-font-util - | sudo pacman -Rnsd
 pacman -Rcnsd xorg-fonts-75dpi xorg-fonts-100dpi xorg-docs
 
 # Delete old/temp files
@@ -16,7 +16,10 @@ fd -t e -x rm -rifv
 pacman -Qtdq | pacman -Rns -
 pacman -Qqd | pacman -Rsu -
 
-# Lostfiles can beused too
+# TODO: Lostfiles
 
 # Journal
 journalctl --rotate --vacuum-time=1s --vacuum-size=0B
+
+# Delete home cache folder
+rm -rfv ~/.cache/*

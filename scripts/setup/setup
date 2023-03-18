@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
 # Imp pkgs
-pacman -S alacritty ripgrep fd man lm_sensors thermald ufw r8168-lts r8168
+pacman -S alacritty ripgrep fd man lm_sensors thermald ufw #r8168-lts r8168
 pacman -S reflector xorg-xinit base-devel
+pacman -S xorg-font-util xorg-mkfontscale
 pacman -S macchanger
 # Font pkg #ttf-lato ttf-fira-code inter-font
 paru -S ttf-jetbrains-mono ttf-apple-emoji
@@ -135,6 +136,8 @@ sensors
 pwmconfig
 systemctl enable --now fancontrol
 echo -e '\n# Fix hwmon path change\ncoretemp' >>/etc/modules-load.d/modules.conf
+
+# auto-cpufreq
 
 # Thermald
 systemctl enable --now thermald

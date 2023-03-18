@@ -58,7 +58,7 @@ echo 'if [[ "$(optimus-manager --print-mode)" =~ 'nvidia' ]]; then
 elif [[ "$(optimus-manager --print-mode)" =~ 'integrated' ]]; then
     export LIBVA_DRIVER_NAME='i965'
     export VDPAU_DRIVER='va_gl'
-    #export VK_ICD_FILENAMES='/usr/share/vulkan/icd.d/intel_icd.x86_64.json'
+    export VK_ICD_FILENAMES='/usr/share/vulkan/icd.d/intel_icd.x86_64.json'
 fi' >/etc/profile.d/env.sh
 
 ### INTEL GPU STUFF
