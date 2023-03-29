@@ -56,7 +56,7 @@ passwd -l root
 
 # SwapFile
 if [ -e /swapfile ]; then echo '/swapfile already exists, skiping'; else
-	dd if=/dev/zero of=/swapfile count=6144 bs=1M status=progress
+	dd if=/dev/zero of=/swapfile count=4000 bs=1MB status=progress
 	chmod -R 600 /swapfile
 	echo -e '\n# Swap\n/swapfile swap swap defaults 0 0' >>/etc/fstab
 	mkswap /swapfile && swapon /swapfile

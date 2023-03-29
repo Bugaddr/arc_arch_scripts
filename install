@@ -112,7 +112,7 @@ base() {
 	# Base
 	pacstrap /mnt --needed base linux-lts linux-firmware intel-ucode
 	# Extra
-	pacstrap /mnt --needed xorg-server networkmanager bluez pipewire{,-pulse,-jack} wireplumber \
+	pacstrap /mnt --needed xorg-server networkmanager bluez pipewire{,-alsa,-pulse,-jack} wireplumber \
 		grub efibootmgr sudo git nano
 }
 

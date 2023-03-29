@@ -16,6 +16,10 @@ fd -t e -x rm -rifv
 pacman -Qtdq | pacman -Rns -
 pacman -Qqd | pacman -Rsu -
 
+# Delete pacman db/pkg cache
+pacman -Sc
+pacman -Scc
+
 # TODO: Lostfiles
 
 # Journal

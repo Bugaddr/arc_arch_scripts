@@ -26,3 +26,7 @@ systemctl --user mask plasma-baloorunner
 # Disable accessablity
 systemctl --user disable app-kaccess@autostart
 systemctl --user mask app-kaccess@autostart
+
+# Disable useless services
+systemctl --user mask plasma-krunner # Dropdown search box
+#systemctl --user mask plasma-kactivitymanagerd # Activity manager # Imp for managing favourites

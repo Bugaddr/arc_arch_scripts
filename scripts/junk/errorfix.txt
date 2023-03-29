@@ -9,10 +9,15 @@ pacman -S wireless-regdb
 iw reg set IN
 
 # NO sound
-pacman -S pipewire # base pipewire
-pacman -S pipewire-pulse # Pulseaudio support for pipewire
-pacman -S pipewire-jack  # Jack
+pacman -S pipewire
+pacman -S pipewire-pulse # Pulseaudio support
+pacman -S pipewire-alsa  # Alsa support
+pacman -S pipewire-jack  # Jack support
 pacman -S wireplumber    # Media session handeler
+
+systemctl --user enable --now pipewire.socket
+systemctl --user enable --now pipewire-pulse.socket
+systemctl --user enable --now wireplumber.service
 
 # pipewire[1181]: mod.rt: Can't find xdg-portal: (null)
 pacman -S xdg-desktop-portal # Desktop integration portals for sandboxed apps [Also need backend eg. xdg-desktop-portal-kde]
