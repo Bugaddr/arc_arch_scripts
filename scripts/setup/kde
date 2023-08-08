@@ -2,7 +2,12 @@
 
 # PKG for plasma
 pacman -S --needed powerdevil dolphin gwenview plasma-firewall plasma-nm plasma-pa kscreen sddm-kcm \
-		kde-gtk-config breeze-gtk kdeplasma-addons spectacle xdg-desktop-portal-kde bluedevil
+	kde-gtk-config breeze-gtk kdeplasma-addons spectacle xdg-desktop-portal-kde bluedevil kdeconnect
 
 # Kwallet
 pacman -S --needed kwallet-pam #kwalletmanager
+
+# Kde connect
+ufw allow proto tcp from 192.168.0.0/24 to any port 1714:1764
+ufw allow proto udp from 192.168.0.0/24 to any port 1714:1764
+ufw reload
