@@ -37,7 +37,7 @@ pacman -S --needed vkd3d lib32-vkd3d                           # Direct3D 12 to 
 ########################
 ### HW VIDEO ACCLERATION
 # VAAPI [check with vainfo in libva-utils package]
-pacman -S --needed libva lib32-libva                           # VA-API for linux
+pacman -S --needed libva lib32-libva lib32-libva-mesa-driver   # VA-API for linux
 pacman -S --needed libva-intel-driver lib32-libva-intel-driver # VA-API driver for intel
 #paru -S --needed libva-intel-driver-hybrid intel-hybrid-codec-driver # Modified libva-intel-driver to support Haswell 8-bit HEVC/h.265 decoding
 
