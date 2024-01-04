@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+# Nvidia drivers
+pacman -S --needed nvidia-dkms
+
+# Intel drivers
+pacman -S --needed intel-media-driver
+
+# Thermald
+pacman -S --needed thermald
+systemctl enable --now thermald 
+
+# Vaapi
+pacman -S --needed libva-nvidia-driver
+
+# Vdpau
+pacman -S --needed libvdpau-va-gl
+
+# Vulkan
+pacman -S --needed vulkan-icd-loader vulkan-intel vulkan-mesa-layers
+
+# Envycontrol
+paru envycontrol
