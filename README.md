@@ -1,10 +1,10 @@
-Arch Linux Installer Script
+Arc: Arch Linux Installer Script
 ===========================
 
 Introduction
 ------------
 
-Welcome to the Arch Linux Installer Script! This script is designed to streamline the installation process of Arch Linux, making it easier and more efficient for users. Whether you're a seasoned Arch Linux enthusiast or a newcomer to the Arch world, this script aims to simplify the installation steps while providing flexibility for customization.
+Welcome to the Arc, an Arch Linux installer script! This script is designed to streamline the installation process of Arch Linux, making it easier and more efficient for users. Whether you're a seasoned Arch Linux enthusiast or a newcomer to the Arch world, this script aims to simplify the installation steps while providing flexibility for customization.
 
 Features
 --------
