@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+
+# pkgs
+pacman -S --needed ttf-jetbrains-mono-nerd firefox fd ripgrep tree
+
+# paru
+pacman -S --needed git
+git clone https://aur.archlinux.org/paru-bin.git /tmp/paru-bin
+cd /tmp/paru-bin || exit
+makepkg -si
+
+# pacman
+sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
+sed -i 's|#Color|Color|g' /etc/pacman.conf
+sed -i 's|#VerbosePkgLists|VerbosePkgLists|g' /etc/pacman.conf
+sed -i 's|#ParallelDownloads|ParallelDownloads|g' /etc/pacman.conf
+
+# mirrors
+pacman -S --needed reflector
+cat <<'EOF' >/etc/xdg/reflector/reflector.conf
+--save /etc/pacman.d/mirrorlist
+--protocol https
+--latest 5
+--sort rate
+EOF
+systemctl enable --now reflector.service reflector.timer
+
+# firewall
+pacman -S --needed ufw
+systemctl enable --now ufw
+ufw default deny incoming
+ufw default allow outgoing
+ufw enable
+
+# networkmanager
+cat <<'EOF' >/etc/NetworkManager/conf.d/custom.conf
+[connection]
+ipv6.ip6-privacy=2
+[connection-mac-randomization]
+ethernet.cloned-mac-address=random
+wifi.cloned-mac-address=random
+EOF
+
+# bluetooth
+systemctl enable --now bluetooth
+
+# thermald
+pacman -S --needed thermald
+systemctl enable --now thermald
+
+# backlight
+sed -i 's|$| acpi_backlight=native|' /etc/kernel/cmdline
+mkinitcpio -P
+
+# secure boot
+pacman -S --needed sbctl
+sbctl create-keys
+sbctl enroll-keys -m
+sbctl verify | sed 's/✗ /sbctl sign -s \//e'
+
+# 165hz
+cat <<'EOF' >/etc/initcpio/install/edid
+#!/bin/bash
+build() {
+    add_file /lib/firmware/edid/edid.bin
+}
+EOF
+cp ~/.dot/edid.bin /lib/firmware/edid/edid.bin
+sed -i 's|$| drm.edid_firmware=eDP-1:edid/edid.bin|' /etc/kernel/cmdline
+mkinitcpio -P
+
+#TODO:165: Add edid to /etc/mkinitcpio.conf hook
+#TODO:165: Configure dotfiles at ~/.dot
+#TODO:new: acer-predator-turbo-and-rgb-keyboard-linux-module
