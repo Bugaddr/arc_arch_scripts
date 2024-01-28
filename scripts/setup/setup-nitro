@@ -71,4 +71,5 @@ mkinitcpio -P
 
 #TODO:165: Add edid to /etc/mkinitcpio.conf hook
 #TODO:165: Configure dotfiles at ~/.dot
+#TODO:new: Add blackarch configuration
 #TODO:new: acer-predator-turbo-and-rgb-keyboard-linux-module
