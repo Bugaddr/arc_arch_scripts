@@ -1,7 +1,7 @@
 Arc: Arch Linux Installer Script
 ===========================
 
-NOTICE: Not recommended to be used by newbie, this script needs modification according to your needs. also read the LICENSE.
+NOTICE: **Not recommended to be used by newbie, this script is outdated as i am mostly using archinstall tool.**
 
 Introduction
 ------------
