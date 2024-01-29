@@ -69,6 +69,13 @@ cp ~/.dot/edid.bin /lib/firmware/edid/edid.bin
 sed -i 's|$| drm.edid_firmware=eDP-1:edid/edid.bin|' /etc/kernel/cmdline
 mkinitcpio -P
 
+# DoH
+# Configure: /etc/dns-over-https/doh-client.conf
+pacman -S --needed dns-over-https
+systemctl enable --now doh-client
+echo -e '[global-dns-domain-*]\nservers=127.0.0.1' >>/etc/NetworkManager/conf.d/dns-servers.conf
+systemctl restart NetworkManager
+
 #TODO:165: Add edid to /etc/mkinitcpio.conf hook
 #TODO:165: Configure dotfiles at ~/.dot
 #TODO:new: Add blackarch configuration
