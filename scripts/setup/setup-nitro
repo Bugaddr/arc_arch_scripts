@@ -73,3 +73,4 @@ mkinitcpio -P
 #TODO:165: Configure dotfiles at ~/.dot
 #TODO:new: Add blackarch configuration
 #TODO:new: acer-predator-turbo-and-rgb-keyboard-linux-module
+#TODO:new: Automatic TPM luks unlocking
