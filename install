@@ -54,14 +54,14 @@ partition() {
 		br
 
 		read -rep '[1 = Save table] [2 = Edit with cgdisk]: ' FSOK
-		if [[ "$FSOK" == '1' ]]; then
+		if [[ $FSOK == '1' ]]; then
 			# Make table [num:start_block:size] [0=default start]
 			sgdisk -Z "$D2E"
 			sgdisk -a 2048 -o "$D2E"
 			sgdisk --align-end --new "$BOOTNO":0:"$BOOTSZ" --typecode "$BOOTNO":ef00 --change-name "$BOOTNO":"BOOT" "$D2E"
 			sgdisk --align-end --new "$ROOTNO":0:"$ROOTSZ" --typecode "$ROOTNO":8300 --change-name "$ROOTNO":"ROOT" "$D2E"
 			sgdisk --align-end --new "$HOMENO":0:"$HOMESZ" --typecode "$HOMENO":8300 --change-name "$HOMENO":"HOME" "$D2E"
-		elif [[ "$FSOK" == '2' ]]; then
+		elif [[ $FSOK == '2' ]]; then
 			clear
 			cgdisk "$D2E"
 		fi
@@ -69,7 +69,7 @@ partition() {
 		sgdisk -p "$D2E"
 		partprobe "$D2E"
 
-	elif [[ "$POPT" == '2' ]]; then
+	elif [[ $POPT == '2' ]]; then
 		true
 	else
 		exit
@@ -81,7 +81,7 @@ mounter() {
 	clear && lsblk && br
 	read -rp 'Which is your ROOT partition: ' ROOTP
 	read -rep 'Format ROOT [Y/N]: ' ROOTYN
-	if [[ "$ROOTYN" =~ ^([Yy][Ee][Ss]|[Yy])$ ]]; then
+	if [[ $ROOTYN =~ ^([Yy][Ee][Ss]|[Yy])$ ]]; then
 		sleep 3
 		mkfs.ext4 "$ROOTP"
 	fi
@@ -90,17 +90,17 @@ mounter() {
 	clear && lsblk && br
 	read -rp 'Which is your BOOT partition: ' BOOTP
 	read -rep 'Format BOOT [Y/N]: ' BOOTYN
-	if [[ "$BOOTYN" =~ ^([Yy][Ee][Ss]|[Yy])$ ]]; then
+	if [[ $BOOTYN =~ ^([Yy][Ee][Ss]|[Yy])$ ]]; then
 		mkfs.fat -F32 "$BOOTP"
 	fi
 	mount --mkdir -o 'defaults,noatime,nosuid,nodev' "$BOOTP" /mnt/boot/efi
 	# Home
 	clear && lsblk && br
 	read -rp 'Do you want to mount seperate home partition [Y/N]: ' RESPH
-	if [[ "$RESPH" =~ ^([Yy][Ee][Ss]|[Yy])$ ]]; then
+	if [[ $RESPH =~ ^([Yy][Ee][Ss]|[Yy])$ ]]; then
 		read -rp 'Which is your HOME partition: ' HOMEP
 		read -rp 'Format HOME [Y/N]: ' HOMEYN
-		if [[ "$HOMEYN" =~ ^([Yy][Ee][Ss]|[Yy])$ ]]; then
+		if [[ $HOMEYN =~ ^([Yy][Ee][Ss]|[Yy])$ ]]; then
 			sleep 3
 			mkfs.ext4 "$HOMEP"
 		fi
@@ -129,7 +129,7 @@ chroot() {
 		read -rep 'Enter new Timezone: ' -i 'Asia/Kolkata' TZONE
 		echo -e "\nUsername = $USERN\nHostname = $HNAME\nTimezone = $TZONE\n"
 		read -rep 'Is above data correct? [Y/N]: ' DATAYN
-		if [[ "$DATAYN" =~ ^([Yy][Ee][Ss]|[Yy])$ ]]; then true; else clear && askvars; fi
+		if [[ $DATAYN =~ ^([Yy][Ee][Ss]|[Yy])$ ]]; then true; else clear && askvars; fi
 	}
 
 	# Vars
@@ -164,19 +164,19 @@ chroot() {
 deskenv() {
 	br && echo -e '1. GNOME\n2. DEEPIN\n3. KDE\n4. XFCE\n5. LXQT\n'
 	read -rp 'Choose a desktop env to install [1-5]: ' DESKTOPENV
-	if [[ "$DESKTOPENV" == '1' ]]; then
+	if [[ $DESKTOPENV == '1' ]]; then
 		pacstrap /mnt --needed gnome
 		arch-chroot /mnt bash -c 'systemctl enable --now gdm'
-	elif [[ "$DESKTOPENV" == '2' ]]; then
+	elif [[ $DESKTOPENV == '2' ]]; then
 		pacstrap /mnt --needed deepin lightdm
 		arch-chroot /mnt bash -c 'systemctl enable --now lightdm'
-	elif [[ "$DESKTOPENV" == '3' ]]; then
+	elif [[ $DESKTOPENV == '3' ]]; then
 		pacstrap /mnt --needed plasma-desktop sddm
 		arch-chroot /mnt bash -c 'systemctl enable --now sddm'
-	elif [[ "$DESKTOPENV" == '4' ]]; then
+	elif [[ $DESKTOPENV == '4' ]]; then
 		pacstrap /mnt --needed xfce4 lightdm lightdm-gtk-greeter
 		arch-chroot /mnt bash -c 'systemctl enable --now lightdm'
-	elif [[ "$DESKTOPENV" == '5' ]]; then
+	elif [[ $DESKTOPENV == '5' ]]; then
 		pacstrap /mnt --needed lxqt sddm
 		arch-chroot /mnt bash -c 'systemctl enable --now sddm'
 	fi
@@ -195,7 +195,7 @@ unmounter() {
 
 rebooter() {
 	read -rp 'Reboot system [Y/N]: ' REBOOTYN
-	if [[ "$REBOOTYN" =~ ^([Yy][Ee][Ss]|[Yy])$ ]]; then
+	if [[ $REBOOTYN =~ ^([Yy][Ee][Ss]|[Yy])$ ]]; then
 		reboot
 	fi
 }

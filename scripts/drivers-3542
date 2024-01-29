@@ -48,7 +48,7 @@ pacman -S --needed libvdpau lib32-libvdpau
 pacman -S --needed libva-vdpau-driver lib32-libva-vdpau-driver # VDPAU-based backend for VA-API
 pacman -S --needed libvdpau-va-gl                              # VDPAU driver with OpenGL/VAAPI backend. H.264 only
 #paru -S --needed libva-nvidia-driver                          # CUDA NVDECODE based backend for VAAPI (Need cuda) [Conflict: libva-vdpau-driver]
-pacman -S --needed mesa-vdpau lib32-mesa-vdpau                 # Mesa VDPAU drivers
+pacman -S --needed mesa-vdpau lib32-mesa-vdpau # Mesa VDPAU drivers
 
 # Env variable for VDPAU/VAAPI/VULKAN
 echo 'if [[ "$(optimus-manager --print-mode)" =~ 'nvidia' ]]; then
