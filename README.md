@@ -41,7 +41,7 @@ Usage
 Support and Contributions
 -------------------------
 
-For support or to contribute to the script's development, please visit our GitHub repository.
+For support or to contribute to the script's development, please use issues and pull requests.
 
 Disclaimer
 ----------
