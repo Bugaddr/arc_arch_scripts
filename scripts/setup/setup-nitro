@@ -55,6 +55,7 @@ mkinitcpio -P
 # secure boot
 pacman -S --needed sbctl
 sbctl create-keys
+systemctl reboot --firmware-setup # Enter secure boot custom mode
 sbctl enroll-keys -m
 sbctl verify | sed 's/✗ /sbctl sign -s \//e'
 
@@ -75,6 +76,10 @@ pacman -S --needed dns-over-https
 systemctl enable --now doh-client
 echo -e '[global-dns-domain-*]\nservers=127.0.0.1' >>/etc/NetworkManager/conf.d/dns-servers.conf
 systemctl restart NetworkManager
+
+# TPM
+sudo systemd-cryptenroll /dev/nvme0n1p6 --recovery-key
+sudo systemd-cryptenroll --tpm2-device=auto --tpm2-pcrs=0+7 /dev/nvme0n1p6
 
 #TODO:165: Add edid to /etc/mkinitcpio.conf hook
 #TODO:165: Configure dotfiles at ~/.dot
