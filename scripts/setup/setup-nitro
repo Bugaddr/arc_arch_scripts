@@ -20,8 +20,9 @@ pacman -S --needed reflector
 cat <<'EOF' >/etc/xdg/reflector/reflector.conf
 --save /etc/pacman.d/mirrorlist
 --protocol https
---latest 5
+--latest 10
 --sort rate
+--verbose
 EOF
 systemctl enable --now reflector.service reflector.timer
 
