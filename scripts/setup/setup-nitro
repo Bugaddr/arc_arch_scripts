@@ -53,13 +53,6 @@ systemctl enable --now thermald
 sed -i 's|$| acpi_backlight=native|' /etc/kernel/cmdline
 mkinitcpio -P
 
-# secure boot
-pacman -S --needed sbctl
-sbctl create-keys
-systemctl reboot --firmware-setup # Enter secure boot custom mode
-sbctl enroll-keys -m
-sbctl verify | sed 's/✗ /sbctl sign -s \//e'
-
 # DoH
 # Configure: /etc/dns-over-https/doh-client.conf
 pacman -S --needed dns-over-https
@@ -67,7 +60,5 @@ systemctl enable --now doh-client
 echo -e '[global-dns-domain-*]\nservers=127.0.0.1' >>/etc/NetworkManager/conf.d/dns-servers.conf
 systemctl restart NetworkManager
 
-#TODO:165: Add edid to /etc/mkinitcpio.conf hook
-#TODO:165: Configure dotfiles at ~/.dot
 #TODO:new: Add blackarch configuration
 #TODO:new: acer-predator-turbo-and-rgb-keyboard-linux-module
