@@ -60,17 +60,6 @@ systemctl reboot --firmware-setup # Enter secure boot custom mode
 sbctl enroll-keys -m
 sbctl verify | sed 's/✗ /sbctl sign -s \//e'
 
-# 165hz
-cat <<'EOF' >/etc/initcpio/install/edid
-#!/bin/bash
-build() {
-    add_file /lib/firmware/edid/edid.bin
-}
-EOF
-cp ~/.dot/edid.bin /lib/firmware/edid/edid.bin
-sed -i 's|$| drm.edid_firmware=eDP-1:edid/edid.bin|' /etc/kernel/cmdline
-mkinitcpio -P
-
 # DoH
 # Configure: /etc/dns-over-https/doh-client.conf
 pacman -S --needed dns-over-https
@@ -78,12 +67,7 @@ systemctl enable --now doh-client
 echo -e '[global-dns-domain-*]\nservers=127.0.0.1' >>/etc/NetworkManager/conf.d/dns-servers.conf
 systemctl restart NetworkManager
 
-# TPM
-sudo systemd-cryptenroll /dev/nvme0n1p6 --recovery-key
-sudo systemd-cryptenroll --tpm2-device=auto --tpm2-pcrs=0+7 /dev/nvme0n1p6
-
 #TODO:165: Add edid to /etc/mkinitcpio.conf hook
 #TODO:165: Configure dotfiles at ~/.dot
 #TODO:new: Add blackarch configuration
 #TODO:new: acer-predator-turbo-and-rgb-keyboard-linux-module
-#TODO:new: Automatic TPM luks unlocking
