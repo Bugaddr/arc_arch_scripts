@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 
 # pkgs
-pacman -S --needed ttf-jetbrains-mono-nerd firefox fd ripgrep tree
+pacman -S --needed ttf-jetbrains-mono-nerd firefox fd ripgrep tree nano-syntax-highlighting
 
 # paru
 pacman -S --needed git
-git clone https://aur.archlinux.org/paru-bin.git /tmp/paru-bin
-cd /tmp/paru-bin || exit
+git clone https://aur.archlinux.org/paru-bin.git paru-bin
+cd ./paru-bin || exit
 makepkg -si
+cd .. && rm -rfv ./paru-bin
 
 # pacman
 sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
@@ -44,10 +45,6 @@ EOF
 
 # bluetooth
 systemctl enable --now bluetooth
-
-# thermald
-pacman -S --needed thermald
-systemctl enable --now thermald
 
 # backlight
 sed -i 's|$| acpi_backlight=native|' /etc/kernel/cmdline

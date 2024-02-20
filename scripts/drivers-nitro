@@ -6,10 +6,6 @@ pacman -S --needed nvidia-dkms
 # Intel drivers
 pacman -S --needed intel-media-driver
 
-# Thermald
-pacman -S --needed thermald
-systemctl enable --now thermald
-
 # Vaapi
 pacman -S --needed libva-nvidia-driver
 
