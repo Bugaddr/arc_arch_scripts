@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # pkgs
-pacman -S --needed ttf-jetbrains-mono-nerd firefox fd ripgrep tree nano-syntax-highlighting
+pacman -S --needed ttf-jetbrains-mono-nerd firefox fd ripgrep tree nano-syntax-highlighting man-db wl-clipboard spectacle
 
 # paru
 pacman -S --needed git
@@ -25,7 +25,7 @@ cat <<'EOF' >/etc/xdg/reflector/reflector.conf
 --sort rate
 --verbose
 EOF
-systemctl enable --now reflector.service reflector.timer
+#systemctl enable --now reflector.service reflector.timer
 
 # firewall
 pacman -S --needed ufw

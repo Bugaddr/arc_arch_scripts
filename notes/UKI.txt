@@ -77,5 +77,5 @@ chmod +x /etc/initcpio/post/sbctl-sign
 
 
 ## Add UEFI entry (Needed to create after every new kernel install)
-efibootmgr --create --disk /dev/nvme0n1 --part 5 --label "Arch Linux (linux-lts)" --loader '\EFI\Linux\arch-linux-lts.efi' --unicode
-efibootmgr --create --disk /dev/nvme0n1 --part 5 --label "Arch Linux (linux-lts-fallback)" --loader '\EFI\Linux\arch-linux-lts-fallback.efi' --unicode
+efibootmgr --create --disk /dev/nvme0n1 --part 5 --label "Arch (linux-lts)" --loader '\EFI\Linux\arch-linux-lts.efi' --unicode
+efibootmgr --create --disk /dev/nvme0n1 --part 5 --label "Arch (linux-lts-fallback)" --loader '\EFI\Linux\arch-linux-lts-fallback.efi' --unicode

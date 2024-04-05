@@ -16,4 +16,4 @@ pacman -S --needed libvdpau-va-gl
 pacman -S --needed vulkan-icd-loader vulkan-intel vulkan-mesa-layers
 
 # Envycontrol
-paru envycontrol
+paru -S --needed envycontrol
