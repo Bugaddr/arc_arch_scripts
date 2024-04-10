@@ -1,0 +1,5 @@
+## Installation
+pacman -S --needed qemu-desktop virt-manager virt-viewer dnsmasq qemu-guest-agent
+systemctl enable libvirtd
+virsh net-autostart default
+virsh net-start default 
