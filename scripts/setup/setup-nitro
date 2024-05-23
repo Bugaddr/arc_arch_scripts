@@ -57,5 +57,11 @@ systemctl enable --now doh-client
 echo -e '[global-dns-domain-*]\nservers=127.0.0.1' >>/etc/NetworkManager/conf.d/dns-servers.conf
 systemctl restart NetworkManager
 
-#TODO:new: Add blackarch configuration
+# Fan
+paru --needed -S nbfc-linux
+nbfc config --set auto
+nbfc config --recommend
+nbfc start
+systemctl enable --now nbfc_service
+
 #TODO:new: acer-predator-turbo-and-rgb-keyboard-linux-module

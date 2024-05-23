@@ -2,6 +2,7 @@
 
 # Nvidia drivers
 pacman -S --needed nvidia-dkms
+systemctl enable --now nvidia-resume.service
 
 # Intel drivers
 pacman -S --needed intel-media-driver
