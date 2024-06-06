@@ -21,3 +21,8 @@ systemctl --user enable --now wireplumber.service
 
 # pipewire[1181]: mod.rt: Can't find xdg-portal: (null)
 pacman -S xdg-desktop-portal # Desktop integration portals for sandboxed apps [Also need backend eg. xdg-desktop-portal-kde]
+
+# Fix ldconfig "file is empty, not checked" error 
+# https://gist.github.com/metzenseifner/cb61ecfd614a93c5927ba3cd62d68127
+# Forcefully reinstall everything otherwise you might get "exists in filesystem" errors in chroot
+pacman -Syyu $(pacman -Qnq) --overwrite '*'
