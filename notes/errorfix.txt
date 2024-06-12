@@ -26,3 +26,11 @@ pacman -S xdg-desktop-portal # Desktop integration portals for sandboxed apps [A
 # https://gist.github.com/metzenseifner/cb61ecfd614a93c5927ba3cd62d68127
 # Forcefully reinstall everything otherwise you might get "exists in filesystem" errors in chroot
 pacman -Syyu $(pacman -Qnq) --overwrite '*'
+
+# Qemu No internet
+# Try above, and check the fucking firewall (its also firewall)
+ufw disable
+ufw reset
+ufw default deny incoming
+ufw default allow outgoing
+ufw enable
