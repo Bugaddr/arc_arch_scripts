@@ -28,9 +28,15 @@ pacman -S xdg-desktop-portal # Desktop integration portals for sandboxed apps [A
 pacman -Syyu $(pacman -Qnq) --overwrite '*'
 
 # Qemu No internet
-# Try above, and check the fucking firewall (its also firewall)
+# Try above, and check the firewall (its always mf firewall)
 ufw disable
 ufw reset
 ufw default deny incoming
 ufw default allow outgoing
 ufw enable
+
+# virt-manager closes/crashes when waking from suspend
+# https://github.com/virt-manager/virt-manager/issues/501
+# https://bugzilla.redhat.com/show_bug.cgi?id=2175667
+# https://gitlab.freedesktop.org/spice/spice-gtk/-/merge_requests/125
+Patch merged in upstream. Subsequent release of spice-gtk should fix this, till then enjoy the coredumps
