@@ -1,10 +1,16 @@
-## https://www.walian.co.uk/
+# Resources
 
-## Make UKI
-# Add commandline to /etc/kernel/cmdline (Fix partuuid)
+1. <https://www.walian.co.uk/>
+
+## Add commandline to /etc/kernel/cmdline (Fix partuuid)
+
+```bash
 echo 'cryptdevice=PARTUUID=b82b63ef-1a8c-4e50-8ede-67a3655093ea:root root=/dev/mapper/root zswap.enabled=0 rootflags=subvol=archroot rw rootfstype=btrfs acpi_backlight=native' >/mnt/etc/kernel/cmdline
+```
 
-# Edit preset file (Need to be done for every new kernel install)
+## Edit preset file (Need to be done for every new kernel install)
+
+```bash
 cat << 'EOF' >/etc/mkinitcpio.d/linux-lts.preset
 # mkinitcpio preset file for the 'linux-lts' package
 
@@ -23,39 +29,60 @@ default_options="--splash /usr/share/systemd/bootctl/splash-arch.bmp"
 fallback_uki="/boot/EFI/Linux/arch-linux-lts-fallback.efi"
 fallback_options="-S autodetect"
 EOF
+```
 
-# Generate uki
+## Generate uki
+
+```bash
 mkdir -p /boot/EFI/Linux
 mkinitcpio -P
+```
 
+## Create secure boot keys
 
-
-## Secure boot
-# Create keys
+```bash
 sbctl create-keys
+```
 
-# Enroll keys
+## Enroll secure boot keys
+
+```bash
 sbctl enroll-keys -m
+```
 
-# Sign files for first time, next time use 'sbctl sign-all' or any pacman hook (Needs to be done after every new kernel or microcode install)
+## Sign files for first time
+
+next time use 'sbctl sign-all' or any pacman hook (Needs to be done after every new kernel or microcode install)
+
+```bash
 sbctl verify | sed 's/✗ /sbctl sign -s \//e'
+```
 
-# Check status
+## Check status
+
+```bash
 sbctl status
+```
 
-# Add mkinitcpio hook to sign uki (Usefull for when we update wireless-regdb or firmware files but pacman hook dont run, so better run it as mkinitcpio hook) 
-# (Use it till sbctl next update only, and keep checking sbctl issues section)
-cat << 'EOF' >/etc/initcpio/post/sbctl-sign
-#!/usr/bin/bash
+## Add mkinitcpio hook to sign uki
 
-uki="$3"
-[[ -n "$uki" ]] || exit 0
-sbctl sign -s "$uki"
-EOF
-chmod +x /etc/initcpio/post/sbctl-sign
+1. Usefull for when we update wireless-regdb or firmware files but pacman hook dont run, so better run it as mkinitcpio hook
+2. Use it till sbctl next update only, and keep checking sbctl issues section
 
+    ```bash
+    cat << 'EOF' >/etc/initcpio/post/sbctl-sign
+    # !/usr/bin/bash
 
+    uki="$3"
+    [[ -n "$uki" ]] || exit 0
+    sbctl sign -s "$uki"
+    EOF
+    chmod +x /etc/initcpio/post/sbctl-sign
+    ```
 
 ## Add UEFI entry (Needed to create after every new kernel install)
+
+```bash
 efibootmgr --create --disk /dev/nvme0n1 --part 5 --label "Arch (linux-lts)" --loader '\EFI\Linux\arch-linux-lts.efi' --unicode
 efibootmgr --create --disk /dev/nvme0n1 --part 5 --label "Arch (linux-lts-fallback)" --loader '\EFI\Linux\arch-linux-lts-fallback.efi' --unicode
+```
