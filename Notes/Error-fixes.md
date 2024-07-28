@@ -58,6 +58,7 @@ ufw reset
 ufw default deny incoming
 ufw default allow outgoing
 ufw enable
+ufw allow in on virbr0 from any to any
 ```
 
 ### Virt-manager closes/crashes when waking from suspend
