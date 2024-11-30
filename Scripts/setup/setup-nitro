@@ -64,4 +64,21 @@ nbfc config --recommend
 nbfc start
 systemctl enable --now nbfc_service
 
-#TODO:new: acer-predator-turbo-and-rgb-keyboard-linux-module
+# Nvidia drivers
+pacman -S --needed nvidia-dkms
+systemctl enable --now nvidia-resume nvidia-suspend nvidia-hibernate
+
+# Intel drivers
+pacman -S --needed intel-media-driver
+
+# Vaapi
+pacman -S --needed libva-nvidia-driver
+
+# Vdpau
+pacman -S --needed libvdpau-va-gl
+
+# Vulkan
+pacman -S --needed vulkan-icd-loader vulkan-intel vulkan-mesa-layers
+
+# Envycontrol
+paru -S --needed envycontrol

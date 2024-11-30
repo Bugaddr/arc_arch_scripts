@@ -2,10 +2,10 @@
 
 1. <https://www.walian.co.uk/>
 
-## Add commandline to /etc/kernel/cmdline (Fix partuuid)
+## Add commandline to /etc/kernel/cmdline (Use your own partuuid)
 
 ```bash
-echo 'cryptdevice=PARTUUID=b82b63ef-1a8c-4e50-8ede-67a3655093ea:root root=/dev/mapper/root zswap.enabled=0 rootflags=subvol=archroot rw rootfstype=btrfs acpi_backlight=native' >/mnt/etc/kernel/cmdline
+echo 'cryptdevice=PARTUUID=b82b63ef-1a8c-4e50-8ede-67a3655093ea:root root=/dev/mapper/root zswap.enabled=0 rootflags=subvol=archroot rw rootfstype=btrfs acpi_backlight=video' >/mnt/etc/kernel/cmdline
 ```
 
 ## Edit preset file (Need to be done for every new kernel install)
@@ -83,6 +83,6 @@ sbctl status
 ## Add UEFI entry (Needed to create after every new kernel install)
 
 ```bash
-efibootmgr --create --disk /dev/nvme0n1 --part 5 --label "Arch (linux-lts)" --loader '\EFI\Linux\arch-linux-lts.efi' --unicode
-efibootmgr --create --disk /dev/nvme0n1 --part 5 --label "Arch (linux-lts-fallback)" --loader '\EFI\Linux\arch-linux-lts-fallback.efi' --unicode
+efibootmgr --create --disk /dev/nvme0n1 --part 5 --label "Arch linux-lts" --loader '\EFI\Linux\arch-linux-lts.efi' --unicode
+efibootmgr --create --disk /dev/nvme0n1 --part 5 --label "Arch linux-lts-fallback" --loader '\EFI\Linux\arch-linux-lts-fallback.efi' --unicode
 ```

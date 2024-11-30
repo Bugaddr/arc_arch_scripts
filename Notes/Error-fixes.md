@@ -12,12 +12,13 @@
 ### cfg80211: failed to load regulatory.db in dmesg
 
 For legal purposes, not necessary
+
     ```bash
     pacman -S wireless-regdb
     iw reg set IN
     ```
 
-### NO sound
+### No sound
 
 ```bash
 pacman -S pipewire
@@ -68,4 +69,16 @@ ufw enable
 
 ### PC not suspending on 6.6.35-2-lts kernel
 
-No specific cause known, use stable kernel instead of lts
+1. No specific cause known, use stable kernel instead of lts
+
+### Captive portal not working
+
+1. Check `/etc/dns-over-https/doh-client.conf` along with DoH.
+
+### Iwlwifi coredump
+
+1. Stop using problemetic firmware
+
+    ```
+    sudo mv iwlwifi-so-a0-hr-b0-83.ucode.zst iwlwifi-so-a0-hr-b0-83.ucode.zst.b
+    ```
