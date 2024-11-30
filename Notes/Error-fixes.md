@@ -59,6 +59,7 @@ ufw reset
 ufw default deny incoming
 ufw default allow outgoing
 ufw enable
+ufw allow in on virbr0 from any to any
 ```
 
 ### Virt-manager closes/crashes when waking from suspend
@@ -66,6 +67,7 @@ ufw enable
 1. <https://github.com/virt-manager/virt-manager/issues/501>
 2. <https://bugzilla.redhat.com/show_bug.cgi?id=2175667>
 3. Patch is merged in upstream. Subsequent release of spice-gtk should fix this, till then enjoy the coredumps
+4. Should be fixed with spice-gtk V0.42-4
 
 ### PC not suspending on 6.6.35-2-lts kernel
 
