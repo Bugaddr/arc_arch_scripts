@@ -15,6 +15,7 @@ sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
 sed -i 's|#Color|Color|g' /etc/pacman.conf
 sed -i 's|#VerbosePkgLists|VerbosePkgLists|g' /etc/pacman.conf
 sed -i 's|#ParallelDownloads = 5|ParallelDownloads = 10|g' /etc/pacman.conf
+systemctl enable --now paccache.timer
 
 # mirrors
 pacman -S --needed reflector
@@ -82,3 +83,5 @@ pacman -S --needed vulkan-icd-loader vulkan-intel vulkan-mesa-layers
 
 # Envycontrol
 paru -S --needed envycontrol
+
+
