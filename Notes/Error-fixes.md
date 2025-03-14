@@ -84,3 +84,7 @@ ufw allow in on virbr0 from any to any
     ```
     sudo mv iwlwifi-so-a0-hr-b0-83.ucode.zst iwlwifi-so-a0-hr-b0-83.ucode.zst.b
     ```
+### Stop discover from autostarting
+1. <https://www.reddit.com/r/kde/comments/f2bquo/how_to_stop_discover_from_autostarting/>
+2. delete `/etc/xdg/autostart/org.kde.discover.notifier.desktop`
+3. echo 'NoExtract = etc/xdg/autostart/org.kde.discover.notifier.desktop' >> /etc/pacman.conf
