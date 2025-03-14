@@ -86,5 +86,5 @@ ufw allow in on virbr0 from any to any
     ```
 ### Stop discover from autostarting
 1. <https://www.reddit.com/r/kde/comments/f2bquo/how_to_stop_discover_from_autostarting/>
-2. delete `/etc/xdg/autostart/org.kde.discover.notifier.desktop`
-3. echo 'NoExtract = etc/xdg/autostart/org.kde.discover.notifier.desktop' >> /etc/pacman.conf
+2. `mv /etc/xdg/autostart/org.kde.discover.notifier.desktop /etc/xdg/autostart/org.kde.discover.notifier.desktop.bak` 
+3. `echo 'NoExtract = etc/xdg/autostart/org.kde.discover.notifier.desktop' >> /etc/pacman.conf`
