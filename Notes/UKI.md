@@ -4,8 +4,14 @@
 
 ## Add commandline to /etc/kernel/cmdline (Use your own partuuid)
 
+- Get uuid from blkid command
+
 ```bash
 echo 'cryptdevice=PARTUUID=b82b63ef-1a8c-4e50-8ede-67a3655093ea:root root=/dev/mapper/root zswap.enabled=0 rootflags=subvol=archroot rw rootfstype=btrfs acpi_backlight=video' >/mnt/etc/kernel/cmdline
+```
+or if not using encryption
+```bash
+echo 'root=PARTUUID=1eb23b8f-1b18-430c-a5d1-a0cfeb430982 zswap.enabled=1 rw rootfstype=ext4 acpi_backlight=video drm.edid_firmware=eDP-1:edid/edid.bin' >/mnt/etc/kernel/cmdline
 ```
 
 ## Edit preset file (Need to be done for every new kernel install)
