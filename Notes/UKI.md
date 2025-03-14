@@ -16,6 +16,8 @@ echo 'root=PARTUUID=1eb23b8f-1b18-430c-a5d1-a0cfeb430982 zswap.enabled=1 rw root
 
 ## Edit preset file (Need to be done for every new kernel install)
 
+- Edit according to kernel type (lts,zen etc)
+
 ```bash
 cat << 'EOF' >/etc/mkinitcpio.d/linux-lts.preset
 # mkinitcpio preset file for the 'linux-lts' package
