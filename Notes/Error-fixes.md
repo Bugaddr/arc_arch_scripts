@@ -4,19 +4,17 @@
 
 2. Not necessary can be fixed in xorg config [https://wiki.archlinux.org/title/NVIDIA/Tips_and_tricks#Listening_to_ACPI_events]
 
-    ```bash
-    pacman -S acpid
-    systemctl enable acpid
-    ```
+   ```bash
+   pacman -S acpid
+   systemctl enable acpid
+   ```
 
 ### cfg80211: failed to load regulatory.db in dmesg
 
 For legal purposes, not necessary
 
-    ```bash
     pacman -S wireless-regdb
     iw reg set IN
-    ```
 
 ### No sound
 
@@ -45,9 +43,9 @@ pacman -S xdg-desktop-portal
 1. <https://gist.github.com/metzenseifner/cb61ecfd614a93c5927ba3cd62d68127>
 2. Forcefully reinstall everything otherwise you might get "exists in filesystem" errors in chroot.
 
-    ```bash
-    pacman -Syyu $(pacman -Qnq) --overwrite '*'
-    ```
+   ```bash
+   pacman -Syyu $(pacman -Qnq) --overwrite '*'
+   ```
 
 ### Qemu No internet
 
@@ -81,21 +79,23 @@ ufw allow in on virbr0 from any to any
 
 1. Stop using problemetic firmware
 
-    ```
-    sudo mv iwlwifi-so-a0-hr-b0-83.ucode.zst iwlwifi-so-a0-hr-b0-83.ucode.zst.b
-    ```
+   ```
+   sudo mv iwlwifi-so-a0-hr-b0-83.ucode.zst iwlwifi-so-a0-hr-b0-83.ucode.zst.b
+   ```
+
 ### Stop discover from autostarting
+
 1. <https://www.reddit.com/r/kde/comments/f2bquo/how_to_stop_discover_from_autostarting/>
-2. `mv /etc/xdg/autostart/org.kde.discover.notifier.desktop /etc/xdg/autostart/org.kde.discover.notifier.desktop.bak` 
+2. `mv /etc/xdg/autostart/org.kde.discover.notifier.desktop /etc/xdg/autostart/org.kde.discover.notifier.desktop.bak`
 3. `echo 'NoExtract = etc/xdg/autostart/org.kde.discover.notifier.desktop' >> /etc/pacman.conf`
 
 ### Touchpad slowing fix
 
 1. make the following file: `/etc/libinput/local-overrides.quirks`
 
-    ```
-    [Touchpad Correction]
-    MatchUdevType=touchpad
-    MatchName=*ELAN050A*
-    AttrSizeHint=90x50
-    ```
+   ```
+   [Touchpad Correction]
+   MatchUdevType=touchpad
+   MatchName=*ELAN050A*
+   AttrSizeHint=90x50
+   ```
