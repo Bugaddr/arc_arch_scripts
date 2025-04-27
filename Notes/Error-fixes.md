@@ -88,3 +88,14 @@ ufw allow in on virbr0 from any to any
 1. <https://www.reddit.com/r/kde/comments/f2bquo/how_to_stop_discover_from_autostarting/>
 2. `mv /etc/xdg/autostart/org.kde.discover.notifier.desktop /etc/xdg/autostart/org.kde.discover.notifier.desktop.bak` 
 3. `echo 'NoExtract = etc/xdg/autostart/org.kde.discover.notifier.desktop' >> /etc/pacman.conf`
+
+### Touchpad slowing fix
+
+1. make the following file: `/etc/libinput/local-overrides.quirks`
+
+    ```
+    [Touchpad Correction]
+    MatchUdevType=touchpad
+    MatchName=*ELAN050A*
+    AttrSizeHint=90x50
+    ```
