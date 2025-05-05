@@ -99,3 +99,21 @@ ufw allow in on virbr0 from any to any
    MatchName=*ELAN050A*
    AttrSizeHint=90x50
    ```
+
+   or
+
+2. add the following in `/etc/udev/rules.d/99-touchpad-power.rules`
+
+   ```
+   ACTION=="add", SUBSYSTEM=="i2c", ATTR{name}=="ELAN050A:01", TEST=="power/control", ATTR{power/control}="on"
+   ```
+
+   then reload with:
+
+   ```
+   sudo udevadm control --reload-rules && sudo udevadm trigger
+   ```
+
+   or
+
+3. Add `i2c_hid.disable_power_management=1` to kernel cmdline
