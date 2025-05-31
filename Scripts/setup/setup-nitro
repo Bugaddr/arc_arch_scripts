@@ -84,4 +84,6 @@ pacman -S --needed vulkan-icd-loader vulkan-intel vulkan-mesa-layers
 # Envycontrol
 paru -S --needed envycontrol
 
-
+# power-profiles-daemon
+pacman -S --needed power-profiles-daemon
+systemctl enable --now power-profiles-daemon
