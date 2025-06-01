@@ -87,3 +87,8 @@ paru -S --needed envycontrol
 # power-profiles-daemon
 pacman -S --needed power-profiles-daemon
 systemctl enable --now power-profiles-daemon
+
+# Switch to ly
+pacman -S --needed ly
+systemctl disable --now sddm
+systemctl enable --now ly
