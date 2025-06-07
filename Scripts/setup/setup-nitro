@@ -88,7 +88,17 @@ paru -S --needed envycontrol
 pacman -S --needed power-profiles-daemon
 systemctl enable --now power-profiles-daemon
 
-# Switch to ly
+# Switch to ly (Add kwallet auto unlock support with PAM)
 pacman -S --needed ly
 systemctl disable --now sddm
 systemctl enable --now ly
+cat <<EOF | sudo tee /etc/pam.d/ly > /dev/null
+#%PAM-1.0
+
+auth       include      login
+auth       optional     pam_kwallet5.so
+account    include      login
+password   include      login
+session    include      login
+session    optional     pam_kwallet5.so auto_start
+EOF
