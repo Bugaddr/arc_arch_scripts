@@ -12,7 +12,7 @@
     sbctl create-keys
     ```
 
-3. Enter UEFI setup and change secure boot mode to custom (Clear all other keys, dont factory reset)
+3. Enter UEFI setup and change secure boot mode to custom (Clear all other keys, dont factory reset, disable secure boot)
 
     ```bash
     systemctl reboot --firmware-setup
