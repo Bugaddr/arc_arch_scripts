@@ -66,7 +66,7 @@ nbfc start
 systemctl enable --now nbfc_service
 
 # Nvidia drivers
-pacman -S --needed nvidia-dkms
+pacman -S --needed nvidia-open
 systemctl enable --now nvidia-resume nvidia-suspend nvidia-hibernate
 
 # Intel drivers
@@ -92,13 +92,3 @@ systemctl enable --now power-profiles-daemon
 pacman -S --needed ly
 systemctl disable --now sddm
 systemctl enable --now ly
-cat <<EOF | sudo tee /etc/pam.d/ly > /dev/null
-#%PAM-1.0
-
-auth       include      login
-auth       optional     pam_kwallet5.so
-account    include      login
-password   include      login
-session    include      login
-session    optional     pam_kwallet5.so auto_start
-EOF
