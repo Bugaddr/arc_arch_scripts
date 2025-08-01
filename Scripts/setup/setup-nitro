@@ -22,7 +22,9 @@ pacman -S --needed reflector
 cat <<'EOF' >/etc/xdg/reflector/reflector.conf
 --save /etc/pacman.d/mirrorlist
 --protocol https
---latest 10
+--latest 20
+--age 12
+--country IN,SG
 --sort rate
 --verbose
 EOF
