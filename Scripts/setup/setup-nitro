@@ -69,7 +69,7 @@ systemctl enable --now nbfc_service
 
 # Nvidia drivers
 pacman -S --needed nvidia-open
-systemctl enable --now nvidia-resume nvidia-suspend nvidia-hibernate
+systemctl enable --now nvidia-resume nvidia-suspend nvidia-hibernate nvidia-powerd
 
 # Intel drivers
 pacman -S --needed intel-media-driver
