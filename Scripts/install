@@ -1,249 +1,382 @@
 #!/usr/bin/env bash
-set -euxo pipefail
-trap 'exit' INT
+#
+# ARC - A Simple Arch Linux Installation Helper Script
+# Description: This script automates the standard Arch Linux installation process
+# with interactive prompts for partitioning, system configuration, and DE installation.
+#
 
-### EXPORT ###
-# DEFAULT SIZE SUGGESTION
-export BOOTSZ='+512M' && export BOOTNO='1'
-export ROOTSZ='+50G' && export ROOTNO='2'
-export HOMESZ='0' && export HOMENO='3'
+# ---
+# Script Setup and Safety
+# ---
+# -e: exit immediately if a command exits with a non-zero status.
+# -u: treat unset variables as an error when substituting.
+# -o pipefail: the return value of a pipeline is the status of the last command
+#              to exit with a non-zero status, or zero if no command exited
+#              with a non-zero status.
+set -euo pipefail
+trap 'echo -e "\nScript interrupted by user. Exiting." >&2; exit 1' INT
 
-### FUNCTIONS ###
-br() { for ((i = 1; i <= $(tput cols); i++)); do echo -n -; done; }
+# ---
+# Colors and Messaging Functions
+# ---
+C_RESET='\033[0m'
+C_RED='\033[0;31m'
+C_GREEN='\033[0;32m'
+C_YELLOW='\033[0;33m'
+C_BLUE='\033[0;34m'
+C_BOLD='\033[1m'
 
-tablesize() {
-	br
-	echo "$D2E$BOOTNO BOOT = $BOOTSZ"
-	echo "$D2E$ROOTNO ROOT = $ROOTSZ"
-	echo "$D2E$HOMENO HOME = $HOMESZ"
-	br
+# Helper for printing messages
+msg() {
+    echo -e "${1}${C_BOLD}[*] ${2}${C_RESET}"
 }
 
-#### STEPS ###
+# Helper for asking yes/no questions
+ask_yes_no() {
+    local prompt="$1 [y/N]: "
+    local response
+    while true; do
+        read -rp "$(echo -e "${C_YELLOW}${C_BOLD}[?] ${prompt}${C_RESET}")" response
+        case "$response" in
+            [Yy]|[Yy][Ee][Ss]) return 0 ;;
+            [Nn]|[Nn][Oo]|"") return 1 ;;
+            *) msg "${C_RED}" "Invalid input. Please enter 'y' or 'n'." ;;
+        esac
+    done
+}
+
+# ---
+# Global Variables and Default Partition Sizes
+# ---
+BOOTSZ='+1G'      # 1GB for /boot/efi, generous for multiple kernels
+ROOTSZ='+50G'     # 50GB for root
+HOMESZ='0'        # '0' means use all remaining space
+SWAPSZ='0'        # '0' means no swap partition by default
+
+# Variables to be set by user
+D2E=""            # Drive to edit (e.g., /dev/sda)
+FS_TYPE="ext4"    # Default filesystem
+
+# ---
+# Core Installation Functions
+# ---
+
+## 1. Refresh Pacman Database
 refreshdb() {
-	pacman -Syy
+    msg "${C_BLUE}" "Synchronizing package databases..."
+    pacman -Syy
+    msg "${C_GREEN}" "Package databases synchronized."
 }
 
+## 2. Disk Partitioning
 partition() {
-	lsblk && br
-	read -rp 'Which drive you want to partition (e.g: /dev/sda): ' D2E
-	br
-	echo -e '1. Create New or Edit old table\n2. Skip partitioning [Use old table]'
-	read -rp ': ' POPT
-	if [[ $POPT == '1' ]]; then
-		clear && echo 'Suggestion for table [0 = All left space]:'
-		tablesize
-		read -rp 'Want to edit [Y/N]: ' SGYN
-		if [[ $SGYN =~ ^([Yy][Ee][Ss]|[Yy])$ ]]; then
-			br
-			echo -e '0 = Use all free space\nG = Gb\nM = Mb\n* Enter for suggested'
-			br
-			echo "Enter size for BOOT | Suggested= $BOOTSZ"
-			read -re -i "$BOOTSZ" BOOTSZ
-			br
-			echo "Enter size for ROOT | Suggested= $ROOTSZ"
-			read -re -i "$ROOTSZ" ROOTSZ
-			br
-			echo "Enter size For HOME | Suggested= $HOMESZ"
-			read -re -i "$HOMESZ" HOMESZ
-		fi
+    lsblk
+    msg "${C_YELLOW}" "Enter the drive you want to partition (e.g., /dev/sda, /dev/nvme0n1)"
+    read -rp "Drive: " D2E
 
-		clear
-		tablesize
-		lsblk
-		br
+    if ! lsblk -ndo NAME "$D2E" >/dev/null 2>&1; then
+        msg "${C_RED}" "Error: Drive '$D2E' does not exist."
+        exit 1
+    fi
 
-		read -rep '[1 = Save table] [2 = Edit with cgdisk]: ' FSOK
-		if [[ $FSOK == '1' ]]; then
-			# Make table [num:start_block:size] [0=default start]
-			sgdisk -Z "$D2E"
-			sgdisk -a 2048 -o "$D2E"
-			sgdisk --align-end --new "$BOOTNO":0:"$BOOTSZ" --typecode "$BOOTNO":ef00 --change-name "$BOOTNO":"BOOT" "$D2E"
-			sgdisk --align-end --new "$ROOTNO":0:"$ROOTSZ" --typecode "$ROOTNO":8300 --change-name "$ROOTNO":"ROOT" "$D2E"
-			sgdisk --align-end --new "$HOMENO":0:"$HOMESZ" --typecode "$HOMENO":8300 --change-name "$HOMENO":"HOME" "$D2E"
-		elif [[ $FSOK == '2' ]]; then
-			clear
-			cgdisk "$D2E"
-		fi
-		# Write table
-		sgdisk -p "$D2E"
-		partprobe "$D2E"
+    if ask_yes_no "This will WIPE ALL DATA on ${D2E}. Do you want to proceed with automatic partitioning?"; then
+        # Prompt user to customize partition sizes
+        msg "${C_BLUE}" "Default partition sizes:"
+        echo -e "  BOOT: ${BOOTSZ}\n  ROOT: ${ROOTSZ}\n  HOME: ${HOMESZ} (0 = remaining space)"
+        read -rep "  SWAP: " -i "8G" SWAPSZ # Suggest 8G swap
 
-	elif [[ $POPT == '2' ]]; then
-		true
-	else
-		exit
-	fi
+        if ask_yes_no "Do you want to edit these sizes?"; then
+            read -rep "Enter size for BOOT partition: " -i "${BOOTSZ}" BOOTSZ
+            read -rep "Enter size for ROOT partition: " -i "${ROOTSZ}" ROOTSZ
+            read -rep "Enter size for HOME partition: " -i "${HOMESZ}" HOMESZ
+            read -rep "Enter size for SWAP partition: " -i "${SWAPSZ}" SWAPSZ
+        fi
+
+        msg "${C_BLUE}" "Creating partitions on ${D2E}..."
+        # Wipe the partition table
+        sgdisk -Z "$D2E"
+        sgdisk -a 2048 -o "$D2E"
+
+        # Create partitions
+        sgdisk --new 1:0:"${BOOTSZ}" --typecode 1:ef00 --change-name 1:"BOOT" "$D2E"
+        sgdisk --new 2:0:"${ROOTSZ}" --typecode 2:8300 --change-name 2:"ROOT" "$D2E"
+        if [[ "${SWAPSZ}" != "0" ]]; then
+            sgdisk --new 3:0:"${SWAPSZ}" --typecode 3:8200 --change-name 3:"SWAP" "$D2E"
+            sgdisk --new 4:0:"${HOMESZ}" --typecode 4:8300 --change-name 4:"HOME" "$D2E"
+        else
+            sgdisk --new 3:0:"${HOMESZ}" --typecode 3:8300 --change-name 3:"HOME" "$D2E"
+        fi
+
+        # Reload partition table
+        partprobe "$D2E"
+        sleep 2 # Give kernel time to recognize changes
+        msg "${C_GREEN}" "Partitioning complete."
+        sgdisk -p "$D2E"
+    elif ask_yes_no "Do you want to manually partition with cgdisk?"; then
+        cgdisk "$D2E"
+    else
+        msg "${C_YELLOW}" "Skipping partitioning. Assuming partitions already exist."
+    fi
 }
 
+## 3. Format and Mount Partitions
 mounter() {
-	# Root
-	clear && lsblk && br
-	read -rp 'Which is your ROOT partition: ' ROOTP
-	read -rep 'Format ROOT [Y/N]: ' ROOTYN
-	if [[ $ROOTYN =~ ^([Yy][Ee][Ss]|[Yy])$ ]]; then
-		sleep 3
-		mkfs.ext4 "$ROOTP"
-	fi
-	mount --mkdir -o 'defaults,noatime' "$ROOTP" /mnt
-	# Boot
-	clear && lsblk && br
-	read -rp 'Which is your BOOT partition: ' BOOTP
-	read -rep 'Format BOOT [Y/N]: ' BOOTYN
-	if [[ $BOOTYN =~ ^([Yy][Ee][Ss]|[Yy])$ ]]; then
-		mkfs.fat -F32 "$BOOTP"
-	fi
-	mount --mkdir -o 'defaults,noatime,nosuid,nodev' "$BOOTP" /mnt/boot/efi
-	# Home
-	clear && lsblk && br
-	read -rp 'Do you want to mount seperate home partition [Y/N]: ' RESPH
-	if [[ $RESPH =~ ^([Yy][Ee][Ss]|[Yy])$ ]]; then
-		read -rp 'Which is your HOME partition: ' HOMEP
-		read -rp 'Format HOME [Y/N]: ' HOMEYN
-		if [[ $HOMEYN =~ ^([Yy][Ee][Ss]|[Yy])$ ]]; then
-			sleep 3
-			mkfs.ext4 "$HOMEP"
-		fi
-		mount --mkdir -o 'defaults,noatime,nosuid,nodev' "$HOMEP" /mnt/home
-	fi
+    clear && lsblk
+    msg "${C_YELLOW}" "Please specify your partitions."
+    
+    # Filesystem choice
+    PS3="$(echo -e ${C_YELLOW}${C_BOLD}'[?] Select filesystem type: '${C_RESET})"
+    select fs_choice in "ext4" "btrfs"; do
+        FS_TYPE=$fs_choice
+        break
+    done
+
+    # Get partitions from user
+    read -rp "ROOT partition (e.g., ${D2E}2): " ROOTP
+    read -rp "BOOT partition (e.g., ${D2E}1): " BOOTP
+    
+    # Formatting
+    msg "${C_BLUE}" "Formatting partitions..."
+    mkfs.fat -F32 "$BOOTP"
+    
+    case "$FS_TYPE" in
+        ext4)
+            mkfs.ext4 -F "$ROOTP"
+            mount "$ROOTP" /mnt
+            ;;
+        btrfs)
+            mkfs.btrfs -f "$ROOTP"
+            mount "$ROOTP" /mnt
+            # Create standard BTRFS subvolumes
+            btrfs subvolume create /mnt/@
+            btrfs subvolume create /mnt/@home
+            umount /mnt
+            # Mount subvolumes
+            mount -o noatime,compress=zstd,subvol=@ "$ROOTP" /mnt
+            mount --mkdir -o noatime,compress=zstd,subvol=@home "$ROOTP" /mnt/home
+            ;;
+    esac
+
+    mount --mkdir "$BOOTP" /mnt/boot/efi
+
+    # Handle swap
+    if ask_yes_no "Do you have a separate SWAP partition to mount?"; then
+        read -rp "SWAP partition: " SWAPP
+        mkswap "$SWAPP"
+        swapon "$SWAPP"
+    fi
+    
+    # Handle home partition (only for ext4)
+    if [[ "$FS_TYPE" == "ext4" ]] && ask_yes_no "Do you have a separate HOME partition to mount?"; then
+        read -rp "HOME partition: " HOMEP
+        mkfs.ext4 -F "$HOMEP"
+        mount --mkdir "$HOMEP" /mnt/home
+    fi
+
+    msg "${C_GREEN}" "Partitions formatted and mounted."
+    lsblk
 }
 
+## 4. Install Base System
 base() {
-	# Base
-	pacstrap /mnt --needed base linux-lts linux-firmware intel-ucode
-	# Extra
-	pacstrap /mnt --needed xorg-server networkmanager bluez pipewire{,-alsa,-pulse,-jack} wireplumber \
-		grub efibootmgr sudo git nano
+    msg "${C_BLUE}" "Detecting CPU vendor..."
+    CPU_VENDOR=$(grep -m 1 "vendor_id" /proc/cpuinfo | awk '{print $3}')
+    MICROCODE_PACKAGE=""
+    if [[ "$CPU_VENDOR" == "GenuineIntel" ]]; then
+        MICROCODE_PACKAGE="intel-ucode"
+        msg "${C_GREEN}" "Intel CPU detected. Installing intel-ucode."
+    elif [[ "$CPU_VENDOR" == "AuthenticAMD" ]]; then
+        MICROCODE_PACKAGE="amd-ucode"
+        msg "${C_GREEN}" "AMD CPU detected. Installing amd-ucode."
+    else
+        msg "${C_YELLOW}" "Could not determine CPU vendor. Skipping microcode."
+    fi
+    
+    msg "${C_BLUE}" "Installing base system packages (this may take a while)..."
+    pacstrap -K /mnt base linux-lts linux-firmware "$MICROCODE_PACKAGE" \
+        networkmanager grub efibootmgr sudo git nano neovim man-db
+    msg "${C_GREEN}" "Base system installation complete."
 }
 
+## 5. Generate Fstab
 fstabgen() {
-	# Generate Fstab
-	genfstab -U /mnt >/mnt/etc/fstab
+    msg "${C_BLUE}" "Generating fstab..."
+    genfstab -U /mnt >> /mnt/etc/fstab
+    msg "${C_GREEN}" "fstab generated successfully."
+    cat /mnt/etc/fstab
 }
 
-chroot() {
-	askvars() {
-		echo -e 'Use only small character without symbol\n'
-		read -rep 'Enter new Username: ' -i 'user' USERN
-		read -rep 'Enter new Hostname: ' -i 'host' HNAME
-		read -rep 'Enter new Timezone: ' -i 'Asia/Kolkata' TZONE
-		echo -e "\nUsername = $USERN\nHostname = $HNAME\nTimezone = $TZONE\n"
-		read -rep 'Is above data correct? [Y/N]: ' DATAYN
-		if [[ $DATAYN =~ ^([Yy][Ee][Ss]|[Yy])$ ]]; then true; else clear && askvars; fi
-	}
+## 6. Chroot and System Configuration
+chroot_config() {
+    # Copy this script to the new system to run the chroot part
+    # This makes passing variables much cleaner
+    cp "$0" /mnt/chroot_script.sh
 
-	# Vars
-	askvars
-	# Timezone & Hwclock
-	arch-chroot /mnt bash -c "ln -sf /usr/share/zoneinfo/$TZONE /etc/localtime"
-	arch-chroot /mnt bash -c 'hwclock --systohc --utc'
-	# Localization
-	sed -i 's|#en_IN.UTF-8|en_IN.UTF-8|g' /mnt/etc/locale.gen
-	arch-chroot /mnt bash -c 'locale-gen'
-	echo -e 'LANG=en_IN.UTF-8\nLANGUAGE=en_IN\nLC_ALL=C' >/mnt/etc/locale.conf
-	# Network configuration
-	echo "$HNAME" >/mnt/etc/hostname
-	echo -e "127.0.0.1 $HNAME\n::1 $HNAME\n127.0.1.1 $HNAME.localdomain $HNAME" >/mnt/etc/hosts
-	# Sudo
-	arch-chroot /mnt bash -c 'if groups | grep sudo >/dev/null; then true; else groupadd sudo; fi'
-	sed -i 's/^#\s*\(%wheel\s\+ALL=(ALL:ALL)\s\+ALL\)/\1/' /mnt/etc/sudoers
-	# Root User
-	br && echo 'Enter powerfull password for Root'
-	arch-chroot /mnt bash -c 'until passwd || ((count++ >= 5)); do echo Try-Again; done'
-	# Normal User
-	br && echo "Enter powerfull password for new-user $USERN"
-	arch-chroot /mnt bash -c "useradd -mUG wheel,users,games,power,optical,storage,audio,video -s /bin/bash $USERN"
-	arch-chroot /mnt bash -c "until passwd $USERN || ((count++ >= 5)); do echo Try-Again; done"
-	# Bootloader
-	arch-chroot /mnt bash -c 'grub-install --target=x86_64-efi --efi-directory=/mnt/boot/efi --bootloader-id=Arch'
-	arch-chroot /mnt bash -c 'grub-mkconfig -o /boot/grub/grub.cfg'
-	# Services
-	arch-chroot /mnt bash -c 'systemctl enable --now NetworkManager'
+    arch-chroot /mnt bash -c "
+        # Set Timezone
+        ln -sf /usr/share/zoneinfo/Asia/Kolkata /etc/localtime
+        hwclock --systohc
+
+        # Localization
+        echo 'en_IN.UTF-8 UTF-8' > /etc/locale.gen
+        locale-gen
+        echo 'LANG=en_IN.UTF-8' > /etc/locale.conf
+
+        # Network Configuration
+        read -rp 'Enter hostname: ' hostname
+        echo \"\$hostname\" > /etc/hostname
+        {
+            echo '127.0.0.1   localhost'
+            echo '::1         localhost'
+            echo '127.0.1.1   '\$hostname'.localdomain '\$hostname
+        } >> /etc/hosts
+
+        # Root Password
+        echo 'Set a strong password for the root user:'
+        passwd
+
+        # User Setup
+        read -rp 'Enter username for the new user: ' username
+        useradd -mG wheel \"\$username\"
+        echo \"Set a strong password for \$username:\"
+        passwd \"\$username\"
+
+        # Sudoers configuration (safer method)
+        echo '%wheel ALL=(ALL:ALL) ALL' > /etc/sudoers.d/wheel
+        chmod 440 /etc/sudoers.d/wheel
+
+        # Bootloader Installation
+        grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Arch
+        grub-mkconfig -o /boot/grub/grub.cfg
+
+        # Enable NetworkManager
+        systemctl enable NetworkManager
+
+        echo 'Base system configured!'
+    "
+    rm /mnt/chroot_script.sh
+    msg "${C_GREEN}" "Chroot configuration complete."
 }
 
+## 7. Install Desktop Environment
 deskenv() {
-	br && echo -e '1. GNOME\n2. DEEPIN\n3. KDE\n4. XFCE\n5. LXQT\n'
-	read -rp 'Choose a desktop env to install [1-5]: ' DESKTOPENV
-	if [[ $DESKTOPENV == '1' ]]; then
-		pacstrap /mnt --needed gnome
-		arch-chroot /mnt bash -c 'systemctl enable --now gdm'
-	elif [[ $DESKTOPENV == '2' ]]; then
-		pacstrap /mnt --needed deepin lightdm
-		arch-chroot /mnt bash -c 'systemctl enable --now lightdm'
-	elif [[ $DESKTOPENV == '3' ]]; then
-		pacstrap /mnt --needed plasma-desktop sddm
-		arch-chroot /mnt bash -c 'systemctl enable --now sddm'
-	elif [[ $DESKTOPENV == '4' ]]; then
-		pacstrap /mnt --needed xfce4 lightdm lightdm-gtk-greeter
-		arch-chroot /mnt bash -c 'systemctl enable --now lightdm'
-	elif [[ $DESKTOPENV == '5' ]]; then
-		pacstrap /mnt --needed lxqt sddm
-		arch-chroot /mnt bash -c 'systemctl enable --now sddm'
-	fi
+    msg "${C_YELLOW}" "Choose a Desktop Environment to install."
+    PS3="$(echo -e ${C_YELLOW}${C_BOLD}'[?] Select an option: '${C_RESET})"
+    select de_choice in "GNOME" "KDE Plasma" "XFCE" "Skip"; do
+        case "$de_choice" in
+            "GNOME")
+                pacstrap /mnt gnome gdm
+                arch-chroot /mnt systemctl enable gdm
+                break
+                ;;
+            "KDE Plasma")
+                pacstrap /mnt plasma-desktop sddm
+                arch-chroot /mnt systemctl enable sddm
+                break
+                ;;
+            "XFCE")
+                pacstrap /mnt xfce4 lightdm lightdm-gtk-greeter
+                arch-chroot /mnt systemctl enable lightdm
+                break
+                ;;
+            "Skip")
+                msg "${C_YELLOW}" "Skipping DE installation."
+                break
+                ;;
+        esac
+    done
+    msg "${C_GREEN}" "Desktop Environment setup complete."
 }
 
+## 8. Unmount and Finalize
 unmounter() {
-	lsblk && br && read -rp 'Unmount all partition [Y/N]: ' UNMOUNTYN
-	if [ "$UNMOUNTYN" = 'y' ] || [ "$UNMOUNTYN" = 'Y' ]; then
-		sync && wait
-		umount -fv /mnt/home && wait
-		umount -fv /mnt/boot/efi && wait
-		umount -fv /mnt && wait
-		swapoff -av && wait
-	fi
+    if ask_yes_no "Unmount all partitions?"; then
+        umount -R /mnt
+        swapoff -a
+        msg "${C_GREEN}" "All partitions unmounted."
+        lsblk
+    fi
 }
 
+## 9. Reboot System
 rebooter() {
-	read -rp 'Reboot system [Y/N]: ' REBOOTYN
-	if [[ $REBOOTYN =~ ^([Yy][Ee][Ss]|[Yy])$ ]]; then
-		reboot
-	fi
+    if ask_yes_no "Reboot the system now?"; then
+        msg "${C_BLUE}" "Rebooting in 3 seconds..."
+        sleep 3
+        reboot
+    fi
 }
 
-main() {
-	clear
-	echo -e '############################'
-	echo -e '#### ARC ARCH INSTALLER ####'
-	echo -e '############################\n'
-	echo -e '1. PacmanDB'
-	echo -e '2. Partition'
-	echo -e '3. Format & mount'
-	echo -e '4. Base'
-	echo -e '5. Genfstab'
-	echo -e '6. Chroot'
-	echo -e '7. Deskenv'
-	echo -e '8. Unmount'
-	echo -e '9. Reboot\n'
-	read -rp 'Enter the number of step [1-8]: ' STEPNO
-	clear
-	if [[ $STEPNO == '1' ]]; then
-		refreshdb
-	elif [[ $STEPNO == '2' ]]; then
-		partition
-	elif [[ $STEPNO == '3' ]]; then
-		mounter
-	elif [[ $STEPNO == '4' ]]; then
-		base
-	elif [[ $STEPNO == '5' ]]; then
-		fstabgen
-	elif [[ $STEPNO == '6' ]]; then
-		chroot
-	elif [[ $STEPNO == '7' ]]; then
-		deskenv
-	elif [[ $STEPNO == '8' ]]; then
-		unmounter
-	elif [[ $STEPNO == '9' ]]; then
-		rebooter
-	else
-		echo 'Invalid number'
-		exit
-	fi
-	# REPEAT
-	main
+
+# ---
+# Main Execution Logic
+# ---
+
+main_menu() {
+    clear
+    msg "${C_BLUE}" "#####################################"
+    msg "${C_BLUE}" "#### ARC - ARCH INSTALLER SCRIPT ####"
+    msg "${C_BLUE}" "#####################################\n"
+    
+    PS3="$(echo -e ${C_YELLOW}${C_BOLD}'[?] Please select an option to run: '${C_RESET})"
+    
+    options=(
+        "Run Full Installation (All Steps)"
+        "1. Refresh Pacman DB"
+        "2. Partition Disk"
+        "3. Format & Mount"
+        "4. Install Base System"
+        "5. Generate Fstab"
+        "6. Chroot & Configure"
+        "7. Install Desktop Env"
+        "8. Unmount"
+        "9. Reboot"
+        "Quit"
+    )
+
+    select opt in "${options[@]}"; do
+        case "$opt" in
+            "Run Full Installation (All Steps)")
+                refreshdb && partition && mounter && base && fstabgen && chroot_config && deskenv && unmounter && rebooter
+                break
+                ;;
+            "1. Refresh Pacman DB") refreshdb; break ;;
+            "2. Partition Disk") partition; break ;;
+            "3. Format & Mount") mounter; break ;;
+            "4. Install Base System") base; break ;;
+            "5. Generate Fstab") fstabgen; break ;;
+            "6. Chroot & Configure") chroot_config; break ;;
+            "7. Install Desktop Env") deskenv; break ;;
+            "8. Unmount") unmounter; break ;;
+            "9. Reboot") rebooter; break ;;
+            "Quit") return 1 ;;
+            *) msg "${C_RED}" "Invalid option $REPLY" ;;
+        esac
+    done
+    return 0
 }
 
-### START ###
-if : >/dev/tcp/8.8.8.8/53; then true; else echo 'Offline [Use iwctl --help]' && exit; fi
+# ---
+# Script Start
+# ---
+# Check for internet connection
+if ! ping -c 1 archlinux.org &>/dev/null; then
+    msg "${C_RED}" "No internet connection. Please connect to the internet first."
+    exit 1
+fi
+# Ensure running as root
+if [[ $EUID -ne 0 ]]; then
+   msg "${C_RED}" "This script must be run as root." 
+   exit 1
+fi
+# Set NTP
 timedatectl set-ntp true
-main
+
+# Main loop
+while main_menu; do
+    ask_yes_no "Return to the main menu?" || break
+done
+
+msg "${C_GREEN}" "Script finished. Happy Arching! 🐧"
 set +e
+exit 0
