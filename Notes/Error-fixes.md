@@ -118,3 +118,17 @@ ufw reload
    or
 
 3. Add `i2c_hid.disable_power_management=1` to kernel cmdline
+
+### Automatic dark mode switching
+
+1. Install pkgs
+
+```bash
+pacman -S xdg-desktop-portal-gtk xdg-desktop-portal-hyprland xdg-desktop-portal darkman
+```
+
+2. Use config from dotfiles & enable services
+
+```bash
+systemctl --user enable darkman
+```
