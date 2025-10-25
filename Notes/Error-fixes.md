@@ -157,7 +157,7 @@ echo "$UDEV_RULE" | sudo tee "$RULE_PATH"
 
 ```bash
 SYMLINK_NAME="nvidia_dgpu"
-RULE_PATH="/etc/udev/rules.d/nvidia-gpu-dev-path.rules"
+RULE_PATH="/etc/udev/rules.d/nvidia-dgpu-dev-path.rules"
 NVIDIA_GPU_ID=$(lspci -d ::03xx | grep -i 'NVIDIA' | cut -f1 -d' ')
 UDEV_RULE="$(cat <<EOF
 KERNEL=="card*", \
