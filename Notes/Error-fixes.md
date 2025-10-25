@@ -132,3 +132,48 @@ pacman -S xdg-desktop-portal-gtk xdg-desktop-portal-hyprland xdg-desktop-portal 
 ```bash
 systemctl --user enable darkman
 ```
+
+### Creating consistent device paths for specific gpu cards
+
+1. Create intel igpu
+
+```bash
+SYMLINK_NAME="intel_igpu"
+RULE_PATH="/etc/udev/rules.d/intel-igpu-dev-path.rules"
+INTEL_IGPU_ID=$(lspci -d ::03xx | grep -i 'Intel.*Graphics\|Intel.*Display' | cut -f1 -d' ')
+UDEV_RULE="$(cat <<EOF
+KERNEL=="card*", \
+KERNELS=="0000:$INTEL_IGPU_ID", \
+SUBSYSTEM=="drm", \
+SUBSYSTEMS=="pci", \
+SYMLINK+="dri/$SYMLINK_NAME"
+EOF
+)"
+
+echo "$UDEV_RULE" | sudo tee "$RULE_PATH"
+```
+
+2. Create nvidia dgpu path
+
+```bash
+SYMLINK_NAME="nvidia_dgpu"
+RULE_PATH="/etc/udev/rules.d/nvidia-gpu-dev-path.rules"
+NVIDIA_GPU_ID=$(lspci -d ::03xx | grep -i 'NVIDIA' | cut -f1 -d' ')
+UDEV_RULE="$(cat <<EOF
+KERNEL=="card*", \
+KERNELS=="0000:$NVIDIA_GPU_ID", \
+SUBSYSTEM=="drm", \
+SUBSYSTEMS=="pci", \
+SYMLINK+="dri/$SYMLINK_NAME"
+EOF
+)"
+
+echo "$UDEV_RULE" | sudo tee "$RULE_PATH"
+```
+
+3. Apply
+
+```bash
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+```
