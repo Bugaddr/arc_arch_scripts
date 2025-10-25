@@ -86,6 +86,10 @@ pacman -S --needed vulkan-icd-loader vulkan-intel vulkan-mesa-layers
 # Envycontrol
 paru -S --needed envycontrol
 
+# wireless regdb
+pacman -S --needed wireless-regdb
+sudo sed -i 's/^#WIRELESS_REGDOM="BO"/WIRELESS_REGDOM="BO"/' /etc/conf.d/wireless-regdom
+
 # power-profiles-daemon
 pacman -S --needed power-profiles-daemon
 systemctl enable --now power-profiles-daemon
