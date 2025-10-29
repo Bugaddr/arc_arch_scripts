@@ -75,7 +75,6 @@ cat <<'EOF' >/etc/NetworkManager/conf.d/dns-servers.conf
 [global-dns-domain-*]
 servers=127.0.0.1
 EOF
-systemctl restart NetworkManager
 
 # Setup NVIDIA drivers
 if lspci | grep -i nvidia &>/dev/null; then
