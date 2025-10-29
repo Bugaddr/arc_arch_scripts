@@ -1,25 +1,33 @@
 #!/usr/bin/env bash
+set -euo pipefail
+IFS=$'\n\t'
 
-# pkgs
-pacman -S --needed ttf-jetbrains-mono-nerd firefox fd ripgrep tree nano-syntax-highlighting man-db wl-clipboard spectacle
+# Ensure root
+[[ $EUID -eq 0 ]] && echo "Running as root..." || { echo "Run as root"; exit 1; }
 
-# paru
-pacman -S --needed base-devel
-git clone https://aur.archlinux.org/paru-bin.git paru
-cd paru
-makepkg -si
-cd ..
-rm -rfv paru
+# Base packages
+pacman -Syu --needed --noconfirm \
+  ttf-jetbrains-mono-nerd firefox fd ripgrep tree \
+  nano-syntax-highlighting man-db wl-clipboard spectacle
 
-# pacman
+# Install paru
+if ! command -v paru &>/dev/null; then
+  pacman -S --needed --noconfirm base-devel git
+  tmpdir=$(mktemp -d)
+  git clone https://aur.archlinux.org/paru-bin.git "$tmpdir"
+  (cd "$tmpdir" && makepkg -si --noconfirm)
+  rm -rf "$tmpdir"
+fi
+
+# Pacman tweaks
 sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
-sed -i 's|#Color|Color|g' /etc/pacman.conf
-sed -i 's|#VerbosePkgLists|VerbosePkgLists|g' /etc/pacman.conf
-sed -i 's|#ParallelDownloads = 5|ParallelDownloads = 10|g' /etc/pacman.conf
+sed -i 's|#Color|Color|' /etc/pacman.conf
+sed -i 's|#VerbosePkgLists|VerbosePkgLists|' /etc/pacman.conf
+sed -i 's|#ParallelDownloads = 5|ParallelDownloads = 10|' /etc/pacman.conf
 systemctl enable --now paccache.timer
 
-# mirrors
-pacman -S --needed reflector
+# Mirrorlist
+pacman -S --needed --noconfirm reflector
 cat <<'EOF' >/etc/xdg/reflector/reflector.conf
 --save /etc/pacman.d/mirrorlist
 --protocol https
@@ -29,16 +37,16 @@ cat <<'EOF' >/etc/xdg/reflector/reflector.conf
 --sort rate
 --verbose
 EOF
-#systemctl enable --now reflector.service reflector.timer
+# systemctl enable --now reflector.timer
 
-# firewall
-pacman -S --needed ufw
+# Firewall
+pacman -S --needed --noconfirm ufw
 systemctl enable --now ufw
 ufw default deny incoming
 ufw default allow outgoing
-ufw enable
+ufw --force enable
 
-# networkmanager
+# NetworkManager config
 cat <<'EOF' >/etc/NetworkManager/conf.d/custom.conf
 [connection]
 ipv6.ip6-privacy=2
@@ -47,55 +55,45 @@ ethernet.cloned-mac-address=random
 wifi.cloned-mac-address=random
 EOF
 
-# bluetooth
+# Bluetooth
 systemctl enable --now bluetooth
 
-# backlight
-sed -i 's|$| acpi_backlight=native|' /etc/kernel/cmdline
-mkinitcpio -P
+# Backlight
+if ! grep -q "acpi_backlight=native" /etc/kernel/cmdline; then
+  sed -i 's|$| acpi_backlight=native|' /etc/kernel/cmdline
+  mkinitcpio -P
+fi
 
-# DoH
-# Configure: /etc/dns-over-https/doh-client.conf
-pacman -S --needed dns-over-https
+# DNS-over-HTTPS
+pacman -S --needed --noconfirm dns-over-https
 systemctl enable --now doh-client
-echo -e '[global-dns-domain-*]\nservers=127.0.0.1' >>/etc/NetworkManager/conf.d/dns-servers.conf
+echo -e '[global-dns-domain-*]\nservers=127.0.0.1' \
+  >/etc/NetworkManager/conf.d/dns-servers.conf
 systemctl restart NetworkManager
 
-# Fan
-paru --needed -S nbfc-linux
-nbfc config --set auto
-nbfc config --recommend
-nbfc start
-systemctl enable --now nbfc_service
+# Fan control
+paru -S --needed --noconfirm nbfc-linux
+nbfc config --set auto || true
+nbfc config --recommend || true
+nbfc start || true
+systemctl enable --now nbfc_service || true
 
-# Nvidia drivers
-pacman -S --needed nvidia-open
+# NVIDIA
+pacman -S --needed --noconfirm nvidia-open
 systemctl enable --now nvidia-resume nvidia-suspend nvidia-hibernate nvidia-powerd
 
-# Intel drivers
-pacman -S --needed intel-media-driver
+# Intel + GPU
+pacman -S --needed --noconfirm \
+  intel-media-driver libva-nvidia-driver libvdpau-va-gl \
+  vulkan-icd-loader vulkan-intel vulkan-mesa-layers
 
-# Vaapi
-pacman -S --needed libva-nvidia-driver
+# EnvyControl
+paru -S --needed --noconfirm envycontrol
 
-# Vdpau
-pacman -S --needed libvdpau-va-gl
+# Wireless regdb
+pacman -S --needed --noconfirm wireless-regdb
+sed -i 's/^#WIRELESS_REGDOM=.*/WIRELESS_REGDOM="BO"/' /etc/conf.d/wireless-regdom
 
-# Vulkan
-pacman -S --needed vulkan-icd-loader vulkan-intel vulkan-mesa-layers
-
-# Envycontrol
-paru -S --needed envycontrol
-
-# wireless regdb
-pacman -S --needed wireless-regdb
-sudo sed -i 's/^#WIRELESS_REGDOM="BO"/WIRELESS_REGDOM="BO"/' /etc/conf.d/wireless-regdom
-
-# power-profiles-daemon
-pacman -S --needed power-profiles-daemon
+# Power profiles
+pacman -S --needed --noconfirm power-profiles-daemon
 systemctl enable --now power-profiles-daemon
-
-# Switch to ly (Add kwallet auto unlock support with PAM)
-pacman -S --needed ly
-systemctl disable --now sddm
-systemctl enable --now ly
