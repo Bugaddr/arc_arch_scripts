@@ -2,22 +2,26 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-# Ensure root
-[[ $EUID -eq 0 ]] && echo "Running as root..." || { echo "Run as root"; exit 1; }
+# Check root privileges
+[[ $EUID -eq 0 ]] || { echo "Run as root"; exit 1; }
 
-# Base packages
+# Install base packages
 pacman -Syu --needed --noconfirm \
   ttf-jetbrains-mono-nerd firefox fd ripgrep tree \
   nano-syntax-highlighting man-db wl-clipboard spectacle
 
-# Pacman tweaks
-sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
-sed -i 's|#Color|Color|' /etc/pacman.conf
-sed -i 's|#VerbosePkgLists|VerbosePkgLists|' /etc/pacman.conf
-sed -i 's|#ParallelDownloads = 5|ParallelDownloads = 10|' /etc/pacman.conf
+# Configure pacman
+if ! grep -q "^\[multilib\]" /etc/pacman.conf; then
+  sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
+fi
+sed -i 's|^#Color|Color|' /etc/pacman.conf
+sed -i 's|^#VerbosePkgLists|VerbosePkgLists|' /etc/pacman.conf
+sed -i 's|^#ParallelDownloads = 5|ParallelDownloads = 10|' /etc/pacman.conf
+pacman -Sy
 
-# Mirrorlist
+# Setup mirrorlist with reflector
 pacman -S --needed --noconfirm reflector
+mkdir -p /etc/xdg/reflector
 cat <<'EOF' >/etc/xdg/reflector/reflector.conf
 --save /etc/pacman.d/mirrorlist
 --protocol https
@@ -27,63 +31,72 @@ cat <<'EOF' >/etc/xdg/reflector/reflector.conf
 --sort rate
 --verbose
 EOF
+systemctl daemon-reload
 systemctl enable --now reflector.timer
 
-# Firewall
+# Configure firewall
 pacman -S --needed --noconfirm ufw
+systemctl daemon-reload
 systemctl enable --now ufw
-ufw default deny incoming
-ufw default allow outgoing
+ufw --force default deny incoming
+ufw --force default allow outgoing
 ufw --force enable
 
-# NetworkManager config
+# Configure NetworkManager
+mkdir -p /etc/NetworkManager/conf.d
 cat <<'EOF' >/etc/NetworkManager/conf.d/custom.conf
 [connection]
 ipv6.ip6-privacy=2
+
 [connection-mac-randomization]
 ethernet.cloned-mac-address=random
 wifi.cloned-mac-address=random
 EOF
-
-# Bluetooth
-systemctl enable --now bluetooth
-
-# Backlight
-if ! grep -q "acpi_backlight=native" /etc/kernel/cmdline; then
-  sed -i 's|$| acpi_backlight=native|' /etc/kernel/cmdline
-  mkinitcpio -P
-fi
-
-# DNS-over-HTTPS
-pacman -S --needed --noconfirm dns-over-https
-systemctl enable --now doh-client
-echo -e '[global-dns-domain-*]\nservers=127.0.0.1' \
-  >/etc/NetworkManager/conf.d/dns-servers.conf
 systemctl restart NetworkManager
 
-# Fan control
-paru -S --needed --noconfirm nbfc-linux
-nbfc config --set auto || true
-nbfc config --recommend || true
-nbfc start || true
-systemctl enable --now nbfc_service || true
+# Setup Bluetooth
+pacman -S --needed --noconfirm bluez bluez-utils
+systemctl daemon-reload
+systemctl enable --now bluetooth
 
-# NVIDIA
-pacman -S --needed --noconfirm nvidia-open
-systemctl enable --now nvidia-resume nvidia-suspend nvidia-hibernate nvidia-powerd
+# Configure backlight
+if [[ -f /etc/kernel/cmdline ]]; then
+  if ! grep -q "acpi_backlight=native" /etc/kernel/cmdline; then
+    sed -i 's|$| acpi_backlight=native|' /etc/kernel/cmdline
+    mkinitcpio -P
+  fi
+fi
 
-# Intel + GPU
+# Setup DNS-over-HTTPS
+pacman -S --needed --noconfirm dns-over-https
+systemctl daemon-reload
+systemctl enable --now doh-client
+mkdir -p /etc/NetworkManager/conf.d
+cat <<'EOF' >/etc/NetworkManager/conf.d/dns-servers.conf
+[global-dns-domain-*]
+servers=127.0.0.1
+EOF
+systemctl restart NetworkManager
+
+# Setup NVIDIA drivers
+if lspci | grep -i nvidia &>/dev/null; then
+  pacman -S --needed --noconfirm nvidia-open
+  systemctl daemon-reload
+  systemctl enable --now nvidia-resume nvidia-suspend nvidia-hibernate nvidia-powerd
+fi
+
+# Setup GPU acceleration
 pacman -S --needed --noconfirm \
   intel-media-driver libva-nvidia-driver libvdpau-va-gl \
   vulkan-icd-loader vulkan-intel vulkan-mesa-layers
 
-# EnvyControl
-paru -S --needed --noconfirm envycontrol
-
-# Wireless regdb
+# Configure wireless regulatory domain
 pacman -S --needed --noconfirm wireless-regdb
-sed -i 's/^#WIRELESS_REGDOM=.*/WIRELESS_REGDOM="BO"/' /etc/conf.d/wireless-regdom
+if [[ -f /etc/conf.d/wireless-regdom ]]; then
+  sed -i 's/^#WIRELESS_REGDOM=.*/WIRELESS_REGDOM="BO"/' /etc/conf.d/wireless-regdom
+fi
 
-# Power profiles
+# Setup power management
 pacman -S --needed --noconfirm power-profiles-daemon
+systemctl daemon-reload
 systemctl enable --now power-profiles-daemon
