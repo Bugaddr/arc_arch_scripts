@@ -52,7 +52,6 @@ ipv6.ip6-privacy=2
 ethernet.cloned-mac-address=random
 wifi.cloned-mac-address=random
 EOF
-systemctl restart NetworkManager
 
 # Setup Bluetooth
 pacman -S --needed --noconfirm bluez bluez-utils
