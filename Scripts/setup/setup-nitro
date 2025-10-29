@@ -69,6 +69,7 @@ fi
 # Setup DNS-over-HTTPS
 pacman -S --needed --noconfirm dns-over-https
 systemctl daemon-reload
+systemctl unmask doh-client
 systemctl enable --now doh-client
 mkdir -p /etc/NetworkManager/conf.d
 cat <<'EOF' >/etc/NetworkManager/conf.d/dns-servers.conf
