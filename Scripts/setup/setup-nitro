@@ -15,7 +15,6 @@ sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
 sed -i 's|#Color|Color|' /etc/pacman.conf
 sed -i 's|#VerbosePkgLists|VerbosePkgLists|' /etc/pacman.conf
 sed -i 's|#ParallelDownloads = 5|ParallelDownloads = 10|' /etc/pacman.conf
-systemctl enable --now paccache.timer
 
 # Mirrorlist
 pacman -S --needed --noconfirm reflector
@@ -28,7 +27,7 @@ cat <<'EOF' >/etc/xdg/reflector/reflector.conf
 --sort rate
 --verbose
 EOF
-# systemctl enable --now reflector.timer
+systemctl enable --now reflector.timer
 
 # Firewall
 pacman -S --needed --noconfirm ufw
