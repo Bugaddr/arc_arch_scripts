@@ -81,6 +81,7 @@ EOF
 if lspci | grep -i nvidia &>/dev/null; then
   pacman -S --needed --noconfirm nvidia-open
   systemctl daemon-reload
+  systemctl unmask nvidia-resume nvidia-suspend nvidia-hibernate nvidia-powerd
   systemctl enable --now nvidia-resume nvidia-suspend nvidia-hibernate nvidia-powerd
 fi
 
