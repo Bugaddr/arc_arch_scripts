@@ -8,7 +8,7 @@ IFS=$'\n\t'
 # Install base packages
 pacman -Syu --needed --noconfirm \
   ttf-jetbrains-mono-nerd firefox fd ripgrep tree \
-  nano-syntax-highlighting man-db wl-clipboard spectacle
+  nano-syntax-highlighting man-db wl-clipboard spectacle noto-fonts-emoji
 
 # Configure pacman
 if ! grep -q "^\[multilib\]" /etc/pacman.conf; then
