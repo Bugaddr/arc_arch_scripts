@@ -95,3 +95,9 @@ fi
 pacman -S --needed --noconfirm power-profiles-daemon
 systemctl daemon-reload
 systemctl enable --now power-profiles-daemon
+
+# Configure auto kwallet unlock
+sudo cp /etc/pam.d/system-login /etc/pam.d/system-login.bak.$(date +%Y%m%d%H%M%S)
+sudo sed -i '/^auth[[:space:]]\+include[[:space:]]\+system-auth/a auth     optional  pam_kwallet6.so try_first_pass' /etc/pam.d/system-login
+grep -q pam_systemd.so /etc/pam.d/system-login && sudo sed -i '/pam_systemd.so/i session  optional  pam_kwallet6.so auto_start' /etc/pam.d/system-login || \
+  echo 'session  optional  pam_kwallet6.so auto_start' | sudo tee -a /etc/pam.d/system-login
