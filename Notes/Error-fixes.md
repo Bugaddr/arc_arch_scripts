@@ -177,3 +177,16 @@ echo "$UDEV_RULE" | sudo tee "$RULE_PATH"
 sudo udevadm control --reload-rules
 sudo udevadm trigger
 ```
+### Fix arduino ide permission denied
+
+1. Create this file
+   ```bash
+   sudo tee /etc/udev/rules.d/50-arduino.rules > /dev/null << 'EOF'
+   SUBSYSTEMS=="usb", ATTRS{idVendor}=="2341", GROUP="uucp", MODE="0666"
+   SUBSYSTEMS=="usb", ATTRS{idVendor}=="1a86", GROUP="uucp", MODE="0666"
+   EOF
+   ```
+2. Apply
+   ```bash
+   sudo udevadm control --reload-rules && sudo udevadm trigger
+   ```
