@@ -93,7 +93,7 @@ fi
 ```bash
 if [[ -f /etc/kernel/cmdline ]]; then
   if ! grep -q "sysrq_always_enabled=1" /etc/kernel/cmdline; then
-      sed -i '$ s/$/ sysrq_always_enabled=1/' /etc/kernel/cmdline
+      sudo sed -i '$ s/$/ sysrq_always_enabled=1/' /etc/kernel/cmdline
   fi
 fi
 ```
@@ -103,7 +103,7 @@ fi
 ```bash
 if [[ -f /etc/kernel/cmdline ]]; then
   if ! grep -q "nowatchdog" /etc/kernel/cmdline; then
-      sed -i '$ s/$/ nowatchdog/' /etc/kernel/cmdline
+      sudo sed -i '$ s/$/ nowatchdog/' /etc/kernel/cmdline
   fi
 fi
 ```
@@ -211,13 +211,14 @@ EOF
 
 ## Enable TPM2
 
-1. Add systemd after udev and before autodetect instead in /etc/mkinitcpio.conf
-2. Ensure sd-encrypt after block and before filesystems instead of encrypt in /etc/mkinitcpio.conf E.g:
+1. Install lvm2 `pacman -S --needed lvm2`
+2. Add this hooks to /etc/mkinitcpio.conf
 
     ```text
-    HOOKS=(base systemd autodetect keyboard keymap modconf block sd-encrypt filesystems fsck edid)
+    HOOKS=(systemd autodetect microcode modconf kms keyboard sd-vconsole block sd-encrypt lvm2 filesystems fsck)
     ```
 
-3. `mkinitcpio -P`
-4. Generate recovery key of encrypted disk `systemd-cryptenroll --recovery-key /dev/nvme0n1p5`
-5. `systemd-cryptenroll --wipe-slot=tpm2 --tpm2-device=auto --tpm2-pcrs=0+7 /dev/nvme0n1p5`
+3. Generate recovery key of encrypted disk `systemd-cryptenroll --recovery-key /dev/nvme0n1p5`
+4. `systemd-cryptenroll --wipe-slot=tpm2 --tpm2-device=auto --tpm2-pcrs=0+7 /dev/nvme0n1p5`
+5. Add `root UUID=1d337faf-db31-47cf-9ac7-2861b3094ea0 none tpm2-device=auto` to /etc/crypttab.initramfs
+6. Recreate initramfs `mkinitcpio -P`
