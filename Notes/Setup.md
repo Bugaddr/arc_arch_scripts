@@ -108,7 +108,7 @@ options nvidia NVreg_EnableGpuFirmware=0
 EOF
 
 if lspci | grep -i nvidia &>/dev/null; then
-  sudo pacman -S --needed --noconfirm nvidia libva-nvidia-driver
+  sudo pacman -S --needed nvidia libva-nvidia-driver
 
   sudo systemctl unmask nvidia-suspend
   sudo systemctl enable nvidia-suspend
