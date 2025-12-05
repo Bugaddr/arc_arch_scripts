@@ -93,7 +93,7 @@ fi
 ```bash
 if [[ -f /etc/kernel/cmdline ]]; then
   if ! grep -q "sysrq_always_enabled=1" /etc/kernel/cmdline; then
-      sudo sed -i '$ s/$/ sysrq_always_enabled=1/' /etc/kernel/cmdline
+      sed -i '$ s/$/ sysrq_always_enabled=1/' /etc/kernel/cmdline
   fi
 fi
 ```
@@ -101,26 +101,26 @@ fi
 ## NVIDIA GPU drivers
 
 ```bash
-sudo tee /etc/modprobe.d/nvidia_suspend_fix.conf << 'EOF'
+tee /etc/modprobe.d/nvidia_suspend_fix.conf << 'EOF'
 options nvidia NVreg_PreserveVideoMemoryAllocations=1
 options nvidia NVreg_TemporaryFilePath=/var/tmp
 options nvidia NVreg_EnableGpuFirmware=0
 EOF
 
 if lspci | grep -i nvidia &>/dev/null; then
-  sudo pacman -S --needed nvidia libva-nvidia-driver
+  pacman -S --needed nvidia libva-nvidia-driver
 
-  sudo systemctl unmask nvidia-suspend
-  sudo systemctl enable nvidia-suspend
+  systemctl unmask nvidia-suspend
+  systemctl enable nvidia-suspend
 
-  sudo systemctl unmask nvidia-resume
-  sudo systemctl enable nvidia-resume
+  systemctl unmask nvidia-resume
+  systemctl enable nvidia-resume
 
-  sudo systemctl unmask nvidia-hibernate
-  sudo systemctl enable nvidia-hibernate
+  systemctl unmask nvidia-hibernate
+  systemctl enable nvidia-hibernate
 
-  sudo systemctl unmask nvidia-powerd
-  sudo systemctl enable nvidia-powerd
+  systemctl unmask nvidia-powerd
+  systemctl enable nvidia-powerd
 fi
 ```
 
@@ -226,11 +226,11 @@ EOF
     ```
 4. Add TPM key
     ```bash
-    sudo systemd-cryptenroll /dev/nvme0n1p5 --wipe-slot=tpm2 --tpm2-device=auto --tpm2-pcrs=7
+    systemd-cryptenroll /dev/nvme0n1p5 --wipe-slot=tpm2 --tpm2-device=auto --tpm2-pcrs=7
     ````
 5. Modify `/etc/crypttab.initramfs`
     ```bash
-    UUID=$(sudo cryptsetup luksUUID /dev/nvme0n1p5)
-    echo "root UUID=$UUID none tpm2-device=auto" | sudo tee /etc/crypttab.initramfs
+    UUID=$(cryptsetup luksUUID /dev/nvme0n1p5)
+    echo "root UUID=$UUID none tpm2-device=auto" | tee /etc/crypttab.initramfs
     ```
 6. Recreate initramfs `mkinitcpio -P`
