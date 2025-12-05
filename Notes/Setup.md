@@ -72,7 +72,7 @@ systemctl restart NetworkManager
 ```bash
 pacman -S --needed --noconfirm wireless-regdb
 if [[ -f /etc/conf.d/wireless-regdom ]]; then
-  sed -i 's/^#WIRELESS_REGDOM=.*/WIRELESS_REGDOM="IN"/' /etc/conf.d/wireless-regdom
+  sed -i 's/^#WIRELESS_REGDOM="IN"/WIRELESS_REGDOM="IN"/' /etc/conf.d/wireless-regdom
 fi
 iw reg set IN
 ```
@@ -98,24 +98,7 @@ if [[ -f /etc/kernel/cmdline ]]; then
 fi
 ```
 
-## Disable watchdogs
-
-```bash
-if [[ -f /etc/kernel/cmdline ]]; then
-  if ! grep -q "nowatchdog" /etc/kernel/cmdline; then
-      sudo sed -i '$ s/$/ nowatchdog/' /etc/kernel/cmdline
-  fi
-fi
-```
-
-## Enable bluetooth
-
-```bash
-pacman -S --needed --noconfirm bluez bluez-utils
-systemctl enable --now bluetooth
-```
-
-## Setup NVIDIA GPU drivers
+## NVIDIA GPU drivers
 
 ```bash
 if lspci | grep -i nvidia &>/dev/null; then
@@ -125,14 +108,14 @@ if lspci | grep -i nvidia &>/dev/null; then
 fi
 ```
 
-## Setup Intel GPU drivers
+## Intel GPU drivers
 
 ```bash
 pacman -S --needed --noconfirm intel-media-driver libvdpau-va-gl \
   vulkan-icd-loader vulkan-intel vulkan-mesa-layers vpl-gpu-rt
 ```
 
-## Setup power management
+## Power management
 
 ```bash
 pacman -S --needed --noconfirm power-profiles-daemon
@@ -140,7 +123,7 @@ systemctl daemon-reload
 systemctl enable --now power-profiles-daemon
 ```
 
-## Fix keyboard backlight (Acer Nitro 5 AN515-58)
+## Fix keyboard keys
 
 ```bash
 tee /etc/udev/hwdb.d/90-acer-nitro5-an515-58.hwdb > /dev/null << 'EOF'
@@ -152,7 +135,7 @@ systemd-hwdb update
 udevadm trigger --sysname-match="event*"
 ```
 
-## Configure kwallet autologin (TTY login)
+## Configure kwallet autologin (non kde)
 
 ```bash
 cp /etc/pam.d/system-login /etc/pam.d/system-login.bak.$(date +%Y%m%d%H%M%S)
@@ -206,19 +189,32 @@ EOF
 5. Sign unsigned binaries !!
 
     ```bash
-    sbctl verify | sed -E 's|^.* (/.+) is not signed$|sbctl sign -s "\1"|e'
+    sbctl verify | awk '/EFI\/(Linux|systemd|Boot)\/.* is not signed$/ {print $2}' | xargs -r sbctl sign -s
     ```
 
 ## Enable TPM2
 
-1. Install lvm2 `pacman -S --needed lvm2`
+1. Install lvm2
+    ```bash
+    pacman -S --needed lvm2
+    ```
 2. Add this hooks to /etc/mkinitcpio.conf
 
     ```text
-    HOOKS=(systemd autodetect microcode modconf kms keyboard sd-vconsole block sd-encrypt lvm2 filesystems fsck)
+    HOOKS=(base systemd autodetect microcode modconf kms keyboard sd-vconsole block sd-encrypt lvm2 filesystems fsck)
     ```
 
-3. Generate recovery key of encrypted disk `systemd-cryptenroll --recovery-key /dev/nvme0n1p5`
-4. `systemd-cryptenroll --wipe-slot=tpm2 --tpm2-device=auto --tpm2-pcrs=0+7 /dev/nvme0n1p5`
-5. Add `root UUID=1d337faf-db31-47cf-9ac7-2861b3094ea0 none tpm2-device=auto` to /etc/crypttab.initramfs
+3. Generate recovery key of encrypted disk
+    ```bash
+    systemd-cryptenroll --recovery-key /dev/nvme0n1p5
+    ```
+4. Add TPM key
+    ```bash
+    sudo systemd-cryptenroll /dev/nvme0n1p5 --wipe-slot=tpm2 --tpm2-device=auto --tpm2-pcrs=7
+    ````
+5. Modify `/etc/crypttab.initramfs`
+    ```bash
+    UUID=$(sudo cryptsetup luksUUID /dev/nvme0n1p5)
+    echo "root UUID=$UUID none tpm2-device=auto" | sudo tee /etc/crypttab.initramfs
+    ```
 6. Recreate initramfs `mkinitcpio -P`
