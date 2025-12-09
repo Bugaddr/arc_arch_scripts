@@ -136,6 +136,7 @@ pacman -S --needed --noconfirm intel-media-driver libvdpau-va-gl \
 ```bash
 pacman -S --needed --noconfirm power-profiles-daemon thermald
 systemctl daemon-reload
+sensors-detect --auto
 systemctl enable --now power-profiles-daemon thermald
 ```
 
