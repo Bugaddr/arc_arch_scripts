@@ -37,12 +37,6 @@ Usage
 
 3.  **Download the Script**: Clone this repo and execute `./install`
 
-
-Support and Contributions
--------------------------
-
-For support or to contribute to the script's development, please use issues and pull requests.
-
 Disclaimer
 ----------
 
