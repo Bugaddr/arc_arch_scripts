@@ -82,7 +82,7 @@ iw reg set IN
 ```bash
 if [[ -f /etc/kernel/cmdline ]]; then
   if ! grep -q "acpi_backlight=native" /etc/kernel/cmdline; then
-    sed -i 's/$/ acpi_backlight=native/' /etc/kernel/cmdline
+    sed -i 's/$/ acpi_backlight=native acpi_osi=! \"acpi_osi=Windows 2021\"/' /etc/kernel/cmdline
     mkinitcpio -P
   fi
 fi
@@ -131,12 +131,12 @@ pacman -S --needed --noconfirm intel-media-driver libvdpau-va-gl \
   vulkan-icd-loader vulkan-intel vulkan-mesa-layers vpl-gpu-rt
 ```
 
-## Power management
+## Power management & thermald
 
 ```bash
-pacman -S --needed --noconfirm power-profiles-daemon
+pacman -S --needed --noconfirm power-profiles-daemon thermald
 systemctl daemon-reload
-systemctl enable --now power-profiles-daemon
+systemctl enable --now power-profiles-daemon thermald
 ```
 
 ## Fix keyboard keys
