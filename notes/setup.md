@@ -129,6 +129,11 @@ fi
 ```bash
 pacman -S --needed --noconfirm intel-media-driver libvdpau-va-gl \
   vulkan-icd-loader vulkan-intel vulkan-mesa-layers vpl-gpu-rt
+cat <<'EOF' > /etc/environment
+LIBVA_DRIVER_NAME=iHD
+VDPAU_DRIVER=va_gl
+VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/intel_icd.x86_64.json
+EOF
 ```
 
 ## Power management & thermald
