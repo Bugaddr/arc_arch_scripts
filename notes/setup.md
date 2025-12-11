@@ -1,5 +1,15 @@
 # Arch Linux Post-Install Configuration Guide
 
+## Restore my dotfiles
+
+```bash
+git clone --bare git@github.com:Bugaddr/linux_dotfiles.git $HOME/.dotfiles
+alias dot='/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
+mkdir -p ~/.dotfiles-backup && dot checkout 2>&1 | awk '/^\s+\./{print $1}' | xargs -I{} sh -c 'mkdir -p ~/.dotfiles-backup/$(dirname "{}") && mv ~/"{}" ~/.dotfiles-backup/"{}"'
+dot checkout
+dot config --local status.showUntrackedFiles no
+```
+
 ## Configure pacman
 
 ```bash
