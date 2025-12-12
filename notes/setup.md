@@ -49,12 +49,14 @@ ufw --force default allow outgoing
 ufw --force enable
 ```
 
-## Configure NetworkManager [Hardening]
+## NetworkManager [Hardening]
 
 ```bash
 mkdir -p /etc/NetworkManager/conf.d
 cat <<'EOF' > /etc/NetworkManager/conf.d/custom.conf
 [connection]
+ipv4.dhcp-send-hostname=0
+ipv6.dhcp-send-hostname=0
 ipv6.ip6-privacy=2
 [connection-mac-randomization]
 ethernet.cloned-mac-address=random
