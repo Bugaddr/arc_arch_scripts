@@ -94,7 +94,7 @@ iw reg set IN
 ```bash
 if [[ -f /etc/kernel/cmdline ]]; then
   if ! grep -q "acpi_backlight=native" /etc/kernel/cmdline; then
-    sed -i 's/$/ acpi_backlight=native acpi_osi=! \"acpi_osi=Windows 2021\"/' /etc/kernel/cmdline
+    sed -i 's/$/ acpi_backlight=native acpi_osi=! acpi_osi=\"Windows 2021\"/' /etc/kernel/cmdline
     mkinitcpio -P
   fi
 fi
@@ -144,7 +144,6 @@ pacman -S --needed --noconfirm intel-media-driver libvdpau-va-gl \
 cat <<'EOF' > /etc/environment
 LIBVA_DRIVER_NAME=iHD
 VDPAU_DRIVER=va_gl
-VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/intel_icd.x86_64.json
 EOF
 ```
 
@@ -167,18 +166,6 @@ evdev:atkbd:dmi:bvn*:bvr*:bd*:svnAcer*:pnNitro*AN*515-58:pvr*
 EOF
 systemd-hwdb update
 udevadm trigger --sysname-match="event*"
-```
-
-## Configure kwallet autologin (non kde)
-
-```bash
-cp /etc/pam.d/system-login /etc/pam.d/system-login.bak.$(date +%Y%m%d%H%M%S)
-sed -i '/^auth[[:space:]]\+include[[:space:]]\+system-auth/a auth     optional  pam_kwallet6.so try_first_pass' /etc/pam.d/system-login
-if grep -q pam_systemd.so /etc/pam.d/system-login; then
-  sed -i '/pam_systemd.so/i session  optional  pam_kwallet6.so auto_start' /etc/pam.d/system-login
-else
-  echo 'session  optional  pam_kwallet6.so auto_start' | tee -a /etc/pam.d/system-login
-fi
 ```
 
 ## Run SDDM on Wayland
