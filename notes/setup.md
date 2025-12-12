@@ -222,7 +222,7 @@ EOF
 2. Add this hooks to /etc/mkinitcpio.conf
 
     ```text
-    HOOKS=(base systemd autodetect microcode modconf kms keyboard sd-vconsole block sd-encrypt lvm2 filesystems fsck)
+    HOOKS=(systemd autodetect microcode modconf kms keyboard sd-vconsole block sd-encrypt lvm2 filesystems fsck)
     ```
 
 3. Generate recovery key of encrypted disk
