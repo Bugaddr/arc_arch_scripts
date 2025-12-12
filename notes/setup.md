@@ -19,7 +19,6 @@ fi
 sed -i 's|^#Color|Color|' /etc/pacman.conf
 sed -i 's|^#VerbosePkgLists|VerbosePkgLists|' /etc/pacman.conf
 sed -i 's|^#ParallelDownloads = 5|ParallelDownloads = 10|' /etc/pacman.conf
-pacman -Sy
 ```
 
 ## Setup reflector
