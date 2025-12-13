@@ -2,7 +2,7 @@
 
 ```bash
 pacman -S --needed qemu-desktop virt-manager virt-viewer dnsmasq virglrenderer
-systemctl enable --now libvirtd
+systemctl enable --now libvirtd # Run as normal user
 usermod -aG libvirt,kvm $USER
 newgrp libvirt
 virsh net-start default
