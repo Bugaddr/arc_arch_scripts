@@ -2,11 +2,15 @@
 
 ```bash
 pacman -S --needed qemu-desktop virt-manager virt-viewer dnsmasq virglrenderer
-systemctl enable --now libvirtd # Run as normal user
-usermod -aG libvirt,kvm $USER
+systemctl enable --now libvirtd
+
+usermod -aG libvirt,kvm $USER # Run as normal user
 newgrp libvirt
+
 virsh net-start default
 virsh net-autostart default
+
+ufw route allow in on virbr0 out on any
 ```
 
 ## In VM
