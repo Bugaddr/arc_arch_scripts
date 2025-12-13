@@ -21,7 +21,7 @@ ufw reload
 
 ```bash
 echo "nameserver 8.8.8.8" | sudo tee /etc/resolv.conf
-sudo apt update && sudo apt full-upgrade -y && sudo apt autoremove -y
+sudo apt update && sudo apt full-upgrade -y && sudo apt autoremove -y && sudo apt clean
 sudo apt install -y qemu-guest-agent spice-vdagent mesa-utils
 sudo systemctl --user enable --now spice-vdagent
 ```
