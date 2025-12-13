@@ -16,4 +16,5 @@ virsh net-autostart default
 
 ```bash
 sudo apt install -y qemu-guest-agent spice-vdagent mesa-utils
+sudo systemctl --user enable --now spice-vdagent
 ```
