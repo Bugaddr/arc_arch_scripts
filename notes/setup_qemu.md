@@ -10,7 +10,8 @@ newgrp libvirt
 virsh net-start default
 virsh net-autostart default
 
-ufw route allow in on virbr0 out on any
+ufw allow in on virbr0 from any to any
+ufw reload
 ```
 
 ## In VM
