@@ -1,17 +1,19 @@
 # Installation
 
 ```bash
-pacman -S --needed qemu-desktop virt-manager virt-viewer dnsmasq
-systemctl enable libvirtd
+pacman -S --needed qemu-desktop virt-manager virt-viewer dnsmasq virglrenderer
+systemctl enable --now libvirtd
+usermod -aG libvirt,kvm $USER
+newgrp libvirt
+virsh net-start default
 virsh net-autostart default
-virsh net-start default 
 ```
 
 ## In VM
 
-1. add spicevmc channel
-2. Install qemu-guest-agent & spice-vdagent in vm
+1. Add spicevmc channel in virt-manager settings
+2. Install this in vm
 
 ```bash
-sudo apt install qemu-guest-agent spice-vdagent
+sudo apt install -y qemu-guest-agent spice-vdagent mesa-utils
 ```
