@@ -13,17 +13,6 @@ dot config --local status.showUntrackedFiles no
 ## Configure pacman
 
 ```bash
-if ! grep -q "^\[multilib\]" /etc/pacman.conf; then
-  sed -i "/\[multilib\]/,/Include/ s/^#//" /etc/pacman.conf
-fi
-sed -i 's|^#Color|Color|' /etc/pacman.conf
-sed -i 's|^#VerbosePkgLists|VerbosePkgLists|' /etc/pacman.conf
-sed -i 's|^#ParallelDownloads = 5|ParallelDownloads = 10|' /etc/pacman.conf
-```
-
-## Setup reflector
-
-```bash
 pacman -S --needed --noconfirm reflector
 mkdir -p /etc/xdg/reflector
 cat <<'EOF' > /etc/xdg/reflector/reflector.conf
@@ -36,9 +25,16 @@ cat <<'EOF' > /etc/xdg/reflector/reflector.conf
 --verbose
 EOF
 systemctl enable --now reflector.timer
+
+if ! grep -q "^\[multilib\]" /etc/pacman.conf; then
+  sed -i "/\[multilib\]/,/Include/ s/^#//" /etc/pacman.conf
+fi
+sed -i 's|^#Color|Color|' /etc/pacman.conf
+sed -i 's|^#VerbosePkgLists|VerbosePkgLists|' /etc/pacman.conf
+sed -i 's|^#ParallelDownloads = 5|ParallelDownloads = 10|' /etc/pacman.conf
 ```
 
-## Enable UFW
+## Firewall
 
 ```bash
 pacman -S --needed --noconfirm ufw
@@ -64,7 +60,7 @@ EOF
 systemctl restart NetworkManager
 ```
 
-## Setup DNS-over-HTTPS
+## DNS-over-HTTPS
 
 ```bash
 pacman -S --needed --noconfirm dns-over-https
@@ -78,7 +74,7 @@ EOF
 systemctl restart NetworkManager
 ```
 
-## Configure wireless regdb
+## Wireless REGDB
 
 ```bash
 pacman -S --needed --noconfirm wireless-regdb
@@ -88,18 +84,24 @@ fi
 iw reg set IN
 ```
 
-## Fix backlight
+## Cmdline
 
 ```bash
 if [[ -f /etc/kernel/cmdline ]]; then
-  if ! grep -q "acpi_backlight=native" /etc/kernel/cmdline; then
-    sed -i 's/$/ acpi_backlight=native acpi_osi=! acpi_osi=\"Windows 2021\"/' /etc/kernel/cmdline
-    mkinitcpio -P
+  if ! grep -qw "acpi_backlight=native" /etc/kernel/cmdline; then
+    sed -i 's|$| acpi_backlight=native|' /etc/kernel/cmdline
   fi
+  if ! grep -qw "acpi_osi=!" /etc/kernel/cmdline; then
+    sed -i 's|$| acpi_osi=!|' /etc/kernel/cmdline
+  fi
+  if ! grep -qw 'acpi_osi="Windows 2021"' /etc/kernel/cmdline; then
+    sed -i 's|$| acpi_osi="Windows 2021"|' /etc/kernel/cmdline
+  fi
+  mkinitcpio -P
 fi
 ```
 
-## Enable SysRq
+## SysRq
 
 ```bash
 if [[ -f /etc/kernel/cmdline ]]; then
@@ -109,7 +111,7 @@ if [[ -f /etc/kernel/cmdline ]]; then
 fi
 ```
 
-## NVIDIA GPU drivers
+## NVIDIA GPU
 
 ```bash
 tee /etc/modprobe.d/nvidia_suspend_fix.conf << 'EOF'
@@ -135,7 +137,7 @@ if lspci | grep -i nvidia &>/dev/null; then
 fi
 ```
 
-## Intel GPU drivers
+## Intel GPU
 
 ```bash
 pacman -S --needed --noconfirm intel-media-driver libvdpau-va-gl \
@@ -146,13 +148,21 @@ VDPAU_DRIVER=va_gl
 EOF
 ```
 
-## Power management & thermald
+## Intel CPU
 
 ```bash
-pacman -S --needed --noconfirm power-profiles-daemon thermald
-systemctl daemon-reload
+pacman -S --needed --noconfirm thermald
 sensors-detect --auto
-systemctl enable --now power-profiles-daemon thermald
+systemctl daemon-reload
+systemctl enable --now thermald
+```
+
+## Power management
+
+```bash
+pacman -S --needed --noconfirm power-profiles-daemon
+systemctl daemon-reload
+systemctl enable --now power-profiles-daemon
 ```
 
 ## SDDM
