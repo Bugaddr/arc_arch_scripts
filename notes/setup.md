@@ -167,14 +167,14 @@ systemd-hwdb update
 udevadm trigger --sysname-match="event*"
 ```
 
-## Run SDDM on Wayland
+## SDDM
 
 ```bash
 mkdir -p /etc/sddm.conf.d
-cat <<'EOF' > /etc/sddm.conf.d/10-wayland.conf
+sudo install -Dm644 /dev/stdin /etc/sddm.conf.d/10-wayland-hidpi.conf <<'EOF'
 [General]
 DisplayServer=wayland
-GreeterEnvironment=QT_WAYLAND_SHELL_INTEGRATION=layer-shell
+GreeterEnvironment=QT_WAYLAND_SHELL_INTEGRATION=layer-shell,QT_SCREEN_SCALE_FACTORS=1.5,QT_FONT_DPI=144
 [Wayland]
 CompositorCommand=kwin_wayland --drm --no-lockscreen --no-global-shortcuts --locale1
 EOF
