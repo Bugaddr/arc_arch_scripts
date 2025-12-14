@@ -155,18 +155,6 @@ sensors-detect --auto
 systemctl enable --now power-profiles-daemon thermald
 ```
 
-## Fix keyboard keys
-
-```bash
-tee /etc/udev/hwdb.d/90-acer-nitro5-an515-58.hwdb > /dev/null << 'EOF'
-evdev:atkbd:dmi:bvn*:bvr*:bd*:svnAcer*:pnNitro*AN*515-58:pvr*
- KEYBOARD_KEY_ef=kbdillumup
- KEYBOARD_KEY_f0=kbdillumdown
-EOF
-systemd-hwdb update
-udevadm trigger --sysname-match="event*"
-```
-
 ## SDDM
 
 ```bash
