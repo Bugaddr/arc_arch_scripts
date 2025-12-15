@@ -34,6 +34,12 @@ sed -i 's|^#VerbosePkgLists|VerbosePkgLists|' /etc/pacman.conf
 sed -i 's|^#ParallelDownloads = 5|ParallelDownloads = 10|' /etc/pacman.conf
 ```
 
+## SSD
+
+```bash
+sudo systemctl enable --now fstrim.timer
+```
+
 ## Firewall
 
 ```bash
