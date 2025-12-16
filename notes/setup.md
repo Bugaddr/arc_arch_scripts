@@ -93,7 +93,7 @@ sed -i 's|^#ParallelDownloads = 5|ParallelDownloads = 10|' /etc/pacman.conf
 ## SSD
 
 ```bash
-sudo systemctl enable --now fstrim.timer
+systemctl enable --now fstrim.timer
 ```
 
 ## Firewall
@@ -230,7 +230,7 @@ systemctl enable --now power-profiles-daemon
 
 ```bash
 mkdir -p /etc/sddm.conf.d
-sudo install -Dm644 /dev/stdin /etc/sddm.conf.d/10-wayland-hidpi.conf <<'EOF'
+install -Dm644 /dev/stdin /etc/sddm.conf.d/10-wayland-hidpi.conf <<'EOF'
 [General]
 DisplayServer=wayland
 GreeterEnvironment=QT_WAYLAND_SHELL_INTEGRATION=layer-shell,QT_SCREEN_SCALE_FACTORS=1.5,QT_FONT_DPI=144
@@ -242,10 +242,10 @@ EOF
 ## Creating consistent device paths for specific gpu cards
 
 ```bash
-echo 'KERNEL=="card*", KERNELS=="0000:00:02.0", SUBSYSTEM=="drm", SUBSYSTEMS=="pci", SYMLINK+="dri/intel-igpu"' | sudo tee /etc/udev/rules.d/intel-igpu-dev-path.rules
-echo 'KERNEL=="card*", KERNELS=="0000:01:00.0", SUBSYSTEM=="drm", SUBSYSTEMS=="pci", SYMLINK+="dri/nvidia-dgpu"' | sudo tee /etc/udev/rules.d/nvidia-dgpu-dev-path.rules
-sudo udevadm control --reload-rules
-sudo udevadm trigger
+echo 'KERNEL=="card*", KERNELS=="0000:00:02.0", SUBSYSTEM=="drm", SUBSYSTEMS=="pci", SYMLINK+="dri/intel-igpu"' | tee /etc/udev/rules.d/intel-igpu-dev-path.rules
+echo 'KERNEL=="card*", KERNELS=="0000:01:00.0", SUBSYSTEM=="drm", SUBSYSTEMS=="pci", SYMLINK+="dri/nvidia-dgpu"' | tee /etc/udev/rules.d/nvidia-dgpu-dev-path.rules
+udevadm control --reload-rules
+udevadm trigger
 ```
 
 ## Enable secure boot
