@@ -135,43 +135,14 @@ systemctl --user enable darkman
 
 ### Creating consistent device paths for specific gpu cards
 
-1. Create intel igpu
+1. Create paths
 
 ```bash
-SYMLINK_NAME="intel-igpu"
-RULE_PATH="/etc/udev/rules.d/intel-igpu-dev-path.rules"
-INTEL_IGPU_ID="0000:00:02.0"
-UDEV_RULE="$(cat <<EOF
-KERNEL=="card*", \
-KERNELS=="$INTEL_IGPU_ID", \
-SUBSYSTEM=="drm", \
-SUBSYSTEMS=="pci", \
-SYMLINK+="dri/$SYMLINK_NAME"
-EOF
-)"
-
-echo "$UDEV_RULE" | sudo tee "$RULE_PATH"
+echo 'KERNEL=="card*", KERNELS=="0000:00:02.0", SUBSYSTEM=="drm", SUBSYSTEMS=="pci", SYMLINK+="dri/intel-igpu"' | sudo tee /etc/udev/rules.d/intel-igpu-dev-path.rules
+echo 'KERNEL=="card*", KERNELS=="0000:01:00.0", SUBSYSTEM=="drm", SUBSYSTEMS=="pci", SYMLINK+="dri/nvidia-dgpu"' | sudo tee /etc/udev/rules.d/nvidia-dgpu-dev-path.rules
 ```
 
-2. Create nvidia dgpu path
-
-```bash
-SYMLINK_NAME="nvidia-dgpu"
-RULE_PATH="/etc/udev/rules.d/nvidia-dgpu-dev-path.rules"
-NVIDIA_GPU_ID="0000:01:00.0"
-UDEV_RULE="$(cat <<EOF
-KERNEL=="card*", \
-KERNELS=="$NVIDIA_GPU_ID", \
-SUBSYSTEM=="drm", \
-SUBSYSTEMS=="pci", \
-SYMLINK+="dri/$SYMLINK_NAME"
-EOF
-)"
-
-echo "$UDEV_RULE" | sudo tee "$RULE_PATH"
-```
-
-3. Apply
+2. Apply
 
 ```bash
 sudo udevadm control --reload-rules
