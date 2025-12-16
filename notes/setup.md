@@ -239,6 +239,15 @@ CompositorCommand=kwin_wayland --drm --no-lockscreen --no-global-shortcuts --loc
 EOF
 ```
 
+## Creating consistent device paths for specific gpu cards
+
+```bash
+echo 'KERNEL=="card*", KERNELS=="0000:00:02.0", SUBSYSTEM=="drm", SUBSYSTEMS=="pci", SYMLINK+="dri/intel-igpu"' | sudo tee /etc/udev/rules.d/intel-igpu-dev-path.rules
+echo 'KERNEL=="card*", KERNELS=="0000:01:00.0", SUBSYSTEM=="drm", SUBSYSTEMS=="pci", SYMLINK+="dri/nvidia-dgpu"' | sudo tee /etc/udev/rules.d/nvidia-dgpu-dev-path.rules
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+```
+
 ## Enable secure boot
 
 1. Install sbctl
