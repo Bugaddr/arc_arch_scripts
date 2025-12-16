@@ -10,6 +10,62 @@ dot checkout
 dot config --local status.showUntrackedFiles no
 ```
 
+## Swap
+
+```bash
+# 1. Install ZRAM generator
+pacman -S --needed --noconfirm zram-generator
+
+# 2. Configure ZRAM (50% RAM, High Priority)
+cat <<'EOF' > /etc/systemd/zram-generator.conf
+[zram0]
+zram-size = ram / 2
+compression-algorithm = zstd
+swap-priority = 100
+EOF
+
+# 3. Optimize VM parameters for ZRAM
+cat <<'EOF' > /etc/sysctl.d/99-zram.conf
+vm.swappiness = 180
+vm.watermark_boost_factor = 0
+vm.watermark_scale_factor = 125
+vm.page-cluster = 0
+EOF
+
+# 4. Create 4GB Fallback Swapfile (Low Priority)
+SWAP_SIZE=4G
+SWAP_FILE="/swapfile"
+
+# Handle Btrfs CoW specific requirements
+if findmnt -n -o FSTYPE / | grep -q "btrfs"; then
+    truncate -s 0 "$SWAP_FILE"
+    chattr +C "$SWAP_FILE"
+    btrfs property set "$SWAP_FILE" compression none
+fi
+
+dd if=/dev/zero of="$SWAP_FILE" bs=1G count=4 status=progress
+chmod 600 "$SWAP_FILE"
+mkswap "$SWAP_FILE"
+swapon "$SWAP_FILE"
+
+# 5. Persistence
+if ! grep -q "/swapfile" /etc/fstab; then
+    echo "/swapfile none swap defaults,pri=0 0 0" >> /etc/fstab
+fi
+
+# 6. Disable ZSwap to prevent conflicts
+echo 0 > /sys/module/zswap/parameters/enabled
+if [[ -f /etc/kernel/cmdline ]]; then
+  if ! grep -q "zswap.enabled=0" /etc/kernel/cmdline; then
+      sed -i '$ s/$/ zswap.enabled=0/' /etc/kernel/cmdline
+  fi
+fi
+
+# 7. Start Services
+systemctl daemon-reload
+systemctl start systemd-zram-setup@zram0.service
+```
+
 ## Configure pacman
 
 ```bash
