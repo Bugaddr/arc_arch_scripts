@@ -224,13 +224,23 @@ CompositorCommand=kwin_wayland --drm --no-lockscreen --no-global-shortcuts --loc
 EOF
 ```
 
-## Creating consistent device paths for specific gpu cards
+## Create consistent device paths for GPU
 
 ```bash
-echo 'KERNEL=="card*", KERNELS=="0000:00:02.0", SUBSYSTEM=="drm", SUBSYSTEMS=="pci", SYMLINK+="dri/intel-igpu"' | tee /etc/udev/rules.d/intel-igpu-dev-path.rules
-echo 'KERNEL=="card*", KERNELS=="0000:01:00.0", SUBSYSTEM=="drm", SUBSYSTEMS=="pci", SYMLINK+="dri/nvidia-dgpu"' | tee /etc/udev/rules.d/nvidia-dgpu-dev-path.rules
+cat <<EOF | sudo tee /etc/udev/rules.d/99-gpu-paths.rules
+# Intel Integrated GPU (iGPU) - Vendor: 0x8086
+# Matches the primary display controller and the render node for QuickSync/VA-API
+SUBSYSTEM=="drm", SUBSYSTEMS=="pci", ATTRS{vendor}=="0x8086", KERNELS=="0000:00:02.0", KERNEL=="card*", SYMLINK+="dri/intel-igpu", TAG+="systemd"
+SUBSYSTEM=="drm", SUBSYSTEMS=="pci", ATTRS{vendor}=="0x8086", KERNELS=="0000:00:02.0", KERNEL=="renderD*", SYMLINK+="dri/intel-igpu-render", TAG+="systemd"
+
+# NVIDIA Discrete GPU (dGPU) - Vendor: 0x10de
+# Matches the primary controller and the render node for CUDA/NVENC/Optimus
+SUBSYSTEM=="drm", SUBSYSTEMS=="pci", ATTRS{vendor}=="0x10de", KERNELS=="0000:01:00.0", KERNEL=="card*", SYMLINK+="dri/nvidia-dgpu", TAG+="systemd"
+SUBSYSTEM=="drm", SUBSYSTEMS=="pci", ATTRS{vendor}=="0x10de", KERNELS=="0000:01:00.0", KERNEL=="renderD*", SYMLINK+="dri/nvidia-dgpu-render", TAG+="systemd"
+EOF
 udevadm control --reload-rules
 udevadm trigger
+ls -l /dev/dri/ | grep -E "igpu|dgpu"
 ```
 
 ## Enable secure boot
