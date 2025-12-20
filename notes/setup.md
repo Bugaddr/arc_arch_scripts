@@ -167,7 +167,7 @@ options nvidia NVreg_TemporaryFilePath=/var/tmp
 EOF
 
 if lspci | grep -i nvidia &>/dev/null; then
-  pacman -S --needed nvidia libva-nvidia-driver
+  pacman -S --needed nvidia-open libva-nvidia-driver
 
   systemctl unmask nvidia-suspend
   systemctl enable nvidia-suspend
