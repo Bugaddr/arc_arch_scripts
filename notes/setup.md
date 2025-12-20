@@ -227,7 +227,7 @@ EOF
 ## Create consistent device paths for GPU
 
 ```bash
-cat <<EOF | sudo tee /etc/udev/rules.d/99-gpu-paths.rules
+cat <<EOF | tee /etc/udev/rules.d/99-gpu-paths.rules
 # Intel Integrated GPU (iGPU) - Vendor: 0x8086, Matches the primary display controller and the render node for QuickSync/VA-API
 SUBSYSTEM=="drm", ENV{DEVTYPE}=="drm_minor", SUBSYSTEMS=="pci", ATTRS{vendor}=="0x8086", KERNELS=="0000:00:02.0", KERNEL=="card*", SYMLINK+="dri/intel-igpu"
 SUBSYSTEM=="drm", ENV{DEVTYPE}=="drm_minor", SUBSYSTEMS=="pci", ATTRS{vendor}=="0x8086", KERNELS=="0000:00:02.0", KERNEL=="renderD*", SYMLINK+="dri/intel-igpu-render"
