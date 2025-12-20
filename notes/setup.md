@@ -106,11 +106,14 @@ ufw --force default allow outgoing
 ufw --force enable
 ```
 
-## NetworkManager [Hardening]
+## DoH + NetworkManager
 
 ```bash
+pacman -S --needed --noconfirm dns-over-https
 mkdir -p /etc/NetworkManager/conf.d
 cat <<'EOF' > /etc/NetworkManager/conf.d/custom.conf
+[global-dns-domain-*]
+servers=127.0.0.1
 [connection]
 ipv4.dhcp-send-hostname=0
 ipv6.dhcp-send-hostname=0
@@ -119,20 +122,9 @@ ipv6.ip6-privacy=2
 ethernet.cloned-mac-address=random
 wifi.cloned-mac-address=random
 EOF
-systemctl restart NetworkManager
-```
-
-## DNS-over-HTTPS
-
-```bash
-pacman -S --needed --noconfirm dns-over-https
 systemctl unmask doh-client
 systemctl enable --now doh-client
-mkdir -p /etc/NetworkManager/conf.d
-cat <<'EOF' > /etc/NetworkManager/conf.d/doh.conf
-[global-dns-domain-*]
-servers=127.0.0.1
-EOF
+systemctl start doh-client
 systemctl restart NetworkManager
 ```
 
