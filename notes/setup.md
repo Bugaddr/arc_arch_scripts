@@ -142,26 +142,19 @@ iw reg set IN
 
 ```bash
 if [[ -f /etc/kernel/cmdline ]]; then
-  if ! grep -qw "acpi_backlight=native" /etc/kernel/cmdline; then
+  if ! grep -Fq "acpi_backlight=native" /etc/kernel/cmdline; then
     sed -i 's|$| acpi_backlight=native|' /etc/kernel/cmdline
   fi
-  if ! grep -qw "acpi_osi=!" /etc/kernel/cmdline; then
+  if ! grep -Fq "acpi_osi=!" /etc/kernel/cmdline; then
     sed -i 's|$| acpi_osi=!|' /etc/kernel/cmdline
   fi
-  if ! grep -qw 'acpi_osi="Windows 2021"' /etc/kernel/cmdline; then
+  if ! grep -Fq 'acpi_osi="Windows 2021"' /etc/kernel/cmdline; then
     sed -i 's|$| acpi_osi="Windows 2021"|' /etc/kernel/cmdline
   fi
-  mkinitcpio -P
-fi
-```
-
-## SysRq
-
-```bash
-if [[ -f /etc/kernel/cmdline ]]; then
-  if ! grep -q "sysrq_always_enabled=1" /etc/kernel/cmdline; then
-      sed -i '$ s/$/ sysrq_always_enabled=1/' /etc/kernel/cmdline
+  if ! grep -Fq "sysrq_always_enabled=1" /etc/kernel/cmdline; then
+    sed -i 's|$| sysrq_always_enabled=1|' /etc/kernel/cmdline
   fi
+  mkinitcpio -P
 fi
 ```
 
