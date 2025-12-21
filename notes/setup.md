@@ -168,12 +168,10 @@ add_param() {
     fi
 }
 
-add_param "nvidia_drm.modeset=1"
-add_param "zswap.enabled=0"
+add_param "sysrq_always_enabled=1"
 add_param "acpi_backlight=native"
 add_param "acpi_osi=!"
 add_param 'acpi_osi="Windows 2021"'
-add_param "sysrq_always_enabled=1"
 
 mkinitcpio -P
 
