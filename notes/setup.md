@@ -168,9 +168,9 @@ add_param() {
     fi
 }
 
-add_param "sysrq_always_enabled=1"
-add_param "acpi_backlight=native"
-add_param "acpi_osi=!"
+add_param 'sysrq_always_enabled=1'
+add_param 'acpi_backlight=native'
+add_param 'acpi_osi=!'
 add_param 'acpi_osi="Windows 2021"'
 
 mkinitcpio -P
