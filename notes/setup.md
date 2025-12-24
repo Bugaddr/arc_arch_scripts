@@ -207,6 +207,7 @@ pacman -S --needed --noconfirm intel-media-driver libvdpau-va-gl \
 cat <<EOF | tee /etc/environment
 LIBVA_DRIVER_NAME=iHD
 VDPAU_DRIVER=va_gl
+VK_ICD_FILENAMES='/usr/share/vulkan/icd.d/intel_icd.x86_64.json'
 EOF
 
 ```
