@@ -215,6 +215,8 @@ EOF
 
 ```bash
 pacman -S --needed --noconfirm thermald
+aur dptfxtract-bin
+dptfxtract
 sensors-detect --auto
 systemctl daemon-reload
 systemctl enable --now thermald
