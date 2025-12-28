@@ -229,7 +229,7 @@ systemctl enable --now thermald
 ```bash
 pacman -S --needed --noconfirm tuned tuned-ppd
 systemctl daemon-reload
-systemctl enable --now tuned-ppd
+systemctl enable --now tuned tuned-ppd
 
 ```
 
