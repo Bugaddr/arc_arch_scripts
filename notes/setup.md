@@ -227,9 +227,9 @@ systemctl enable --now thermald
 ## Power Management
 
 ```bash
-pacman -S --needed --noconfirm power-profiles-daemon
+pacman -S --needed --noconfirm tuned tuned-ppd
 systemctl daemon-reload
-systemctl enable --now power-profiles-daemon
+systemctl enable --now tuned-ppd
 
 ```
 
