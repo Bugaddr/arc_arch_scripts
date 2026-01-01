@@ -161,3 +161,6 @@ sudo udevadm trigger
    ```bash
    sudo udevadm control --reload-rules && sudo udevadm trigger
    ```
+### Fix touchpad lag in 515-58
+
+1. Disable legacy i8042 driver and let i2c_designware handle it: add `i8042.nopnp` to kernel cmdline
