@@ -16,7 +16,7 @@ sudo ufw allow out on virbr0
 ufw reload
 ```
 
-## Guest
+# Guest
 
 ```bash
 sudo apt update && sudo apt full-upgrade -y && sudo apt autoremove -y && sudo apt clean
