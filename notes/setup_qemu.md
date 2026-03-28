@@ -54,3 +54,41 @@ xfconf-query -c xfwm4 -p /general/show_dock_shadow -s false
 xfconf-query -c xfwm4 -p /general/show_frame_shadow -s false
 xfconf-query -c xfwm4 -p /general/show_popup_shadow -s false
 ```
+
+# Use zram
+
+```bash
+# Set swappiness to 10
+echo 'vm.swappiness=10' | sudo tee -a /etc/sysctl.conf
+sudo sysctl -p
+
+# Verify
+cat /proc/sys/vm/swappiness
+
+sudo apt install zram-tools -y
+echo 'ALGO=zstd' | sudo tee -a /etc/default/zramswap
+echo 'PERCENT=25' | sudo tee -a /etc/default/zramswap
+sudo systemctl enable zramswap
+sudo systemctl start zramswap
+
+# Verify
+zramctl
+```
+
+# Fix scheduler
+```bash
+# Install linux-cpupower
+sudo apt install linux-cpupower -y
+
+# Set performance mode
+sudo cpupower frequency-set -g performance
+
+# Make permanent on boot
+echo 'GOVERNOR="performance"' | sudo tee /etc/default/cpupower
+sudo systemctl enable cpupower
+```
+
+# Use fstrim
+```bash
+sudo systemctl enable fstrim.timer && sudo systemctl start fstrim.timer
+```
