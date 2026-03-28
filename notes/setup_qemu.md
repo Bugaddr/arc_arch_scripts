@@ -24,3 +24,25 @@ sudo apt install -y qemu-guest-agent spice-vdagent mesa-utils spice-webdavd xser
 sudo systemctl --user enable --now spice-vdagent
 sudo reboot
 ```
+
+# Cursor fix in guest
+
+```bash
+echo "[*] Setting XFCE HiDPI cursor..."
+xfconf-query -c xsettings -p /Gtk/CursorThemeName -s "Adwaita"
+xfconf-query -c xsettings -p /Gtk/CursorThemeSize -s 48
+xfconf-query -c xfwm4 -p /general/theme -s "Kali-Dark-xHiDPI"
+xfconf-query -c xsettings -p /Net/ThemeName -s "Kali-Dark-xHiDPI"
+
+echo "[*] Setting Xresources..."
+cat > ~/.Xresources << 'XRES'
+Xcursor.theme: Adwaita
+Xcursor.size: 48
+XRES
+
+echo "[*] Setting session environment..."
+cat >> ~/.xsessionrc << 'ENV'
+export XCURSOR_THEME=Adwaita
+export XCURSOR_SIZE=48
+ENV
+```
