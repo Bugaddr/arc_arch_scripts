@@ -92,3 +92,9 @@ sudo systemctl enable cpupower
 ```bash
 sudo systemctl enable fstrim.timer && sudo systemctl start fstrim.timer
 ```
+
+# FIx double click in kali
+```bash
+xfconf-query -c xsettings -p /Net/DoubleClickTime --create -t int -s 400
+```
+
