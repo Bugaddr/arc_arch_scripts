@@ -46,3 +46,8 @@ export XCURSOR_THEME=Adwaita
 export XCURSOR_SIZE=48
 ENV
 ```
+# Disable compositor
+
+```bash
+xfconf-query -c xfwm4 -p /general/use_compositing -s false
+```
