@@ -184,6 +184,7 @@ mkinitcpio -P
 cat <<EOF | tee /etc/modprobe.d/nvidia_suspend_fix.conf
 options nvidia NVreg_PreserveVideoMemoryAllocations=1
 options nvidia NVreg_TemporaryFilePath=/var/tmp
+options nvidia NVreg_EnableGpuFirmware=0
 EOF
 
 if lspci | grep -i nvidia &>/dev/null; then
