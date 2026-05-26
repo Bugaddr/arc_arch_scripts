@@ -25,26 +25,33 @@ sudo systemctl --user enable --now spice-vdagent
 sudo reboot
 ```
 
-# Cursor fix in guest
+# Set HiDPI Mode & Fix cursor
 
 ```bash
-echo "[*] Setting XFCE HiDPI cursor..."
+# 1. Fix Themes (Dark panels, HiDPI window borders)
+xfconf-query -c xsettings -p /Net/ThemeName -s "Kali-Dark"
+xfconf-query -c xfwm4 -p /general/theme -s "Kali-Dark-xHiDPI"
+
+# 2. Fix GTK Cursor
 xfconf-query -c xsettings -p /Gtk/CursorThemeName -s "Adwaita"
 xfconf-query -c xsettings -p /Gtk/CursorThemeSize -s 48
-xfconf-query -c xfwm4 -p /general/theme -s "Kali-Dark-xHiDPI"
-xfconf-query -c xsettings -p /Net/ThemeName -s "Kali-Dark-xHiDPI"
 
-echo "[*] Setting Xresources..."
-cat > ~/.Xresources << 'XRES'
+# 3. Fix X11 Cursor (Append safely & apply)
+cat >> ~/.Xresources << 'XRES'
 Xcursor.theme: Adwaita
 Xcursor.size: 48
 XRES
+xrdb -merge ~/.Xresources
 
-echo "[*] Setting session environment..."
+# 4. Fix Qt/Xwayland Cursor (Append if not exists)
+if ! grep -q "XCURSOR_SIZE=48" ~/.xsessionrc 2>/dev/null; then
 cat >> ~/.xsessionrc << 'ENV'
 export XCURSOR_THEME=Adwaita
 export XCURSOR_SIZE=48
 ENV
+fi
+
+echo "Done. Log out and back in."
 ```
 # Disable compositor & Effects
 
