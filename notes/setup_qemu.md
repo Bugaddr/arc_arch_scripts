@@ -51,7 +51,14 @@ export XCURSOR_SIZE=48
 ENV
 fi
 
-echo "Done. Log out and back in."
+# 5. Fix App Startup/Loading Cursor (Firefox/GTK3)
+gsettings set org.gnome.desktop.interface cursor-size 48
+gsettings set org.gnome.desktop.interface cursor-theme "Adwaita"
+mkdir -p ~/.icons/default
+cat > ~/.icons/default/index.theme << 'EOF'
+[Icon Theme]
+Inherits=Adwaita
+EOF
 ```
 # Disable compositor & Effects
 
