@@ -21,7 +21,7 @@ ufw reload
 ```bash
 sudo apt update && sudo apt full-upgrade -y && sudo apt autoremove -y && sudo apt clean
 sudo apt install -y qemu-guest-agent spice-vdagent mesa-utils spice-webdavd xserver-xorg-video-qxl
-sudo systemctl --user enable --now spice-vdagent
+systemctl --user enable --now spice-vdagent
 sudo reboot
 ```
 
