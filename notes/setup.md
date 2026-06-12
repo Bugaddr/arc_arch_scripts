@@ -180,22 +180,32 @@ mkinitcpio -P
 ## NVIDIA GPU
 
 ```bash
-# Modprobe configuration (Overwrite)
-cat <<EOF | tee /etc/modprobe.d/nvidia_suspend_fix.conf
+# NVIDIA suspend fix (Arch, hybrid/EnvyControl, S3 sleep)
+# Ref: github.com/NVIDIA/open-gpu-kernel-modules/issues/1142
+#      gist.github.com/bmcbm/375f14eaa17f88756b4bdbbebbcfd029
+
+# Modprobe: preserve VRAM on sleep, disable GSP firmware (fixes GSP unload hang)
+cat <<EOF | sudo tee /etc/modprobe.d/nvidia_suspend_fix.conf
 options nvidia NVreg_PreserveVideoMemoryAllocations=1
 options nvidia NVreg_TemporaryFilePath=/var/tmp
 options nvidia NVreg_EnableGpuFirmware=0
 EOF
 
-if lspci | grep -i nvidia &>/dev/null; then
-    pacman -S --needed nvidia-open libva-nvidia-driver
+# Packages
+sudo pacman -S --needed nvidia-open libva-nvidia-driver
 
-    systemctl unmask nvidia-suspend && systemctl enable nvidia-suspend
-    systemctl unmask nvidia-resume && systemctl enable nvidia-resume
-    systemctl unmask nvidia-hibernate && systemctl enable nvidia-hibernate
-    systemctl unmask nvidia-powerd && systemctl enable nvidia-powerd
-fi
+# Sleep hooks: save/restore GPU state around S3 suspend/hibernate
+sudo systemctl unmask nvidia-suspend nvidia-resume nvidia-hibernate
+sudo systemctl enable nvidia-suspend nvidia-resume nvidia-hibernate
 
+# powerd: needed for full 133W TGP; keeps GPU at P0 idle (acceptable trade-off)
+sudo systemctl unmask nvidia-powerd && sudo systemctl enable nvidia-powerd
+
+# persistenced: server tool, wastes power on laptop, mask it
+sudo systemctl disable nvidia-persistenced && sudo systemctl mask nvidia-persistenced
+
+# Rebuild initramfs to apply modprobe changes
+sudo mkinitcpio -P
 ```
 
 ## Intel GPU
