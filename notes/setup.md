@@ -195,8 +195,8 @@ EOF
 sudo pacman -S --needed nvidia-open libva-nvidia-driver
 
 # Sleep hooks: save/restore GPU state around S3 suspend/hibernate
-sudo systemctl unmask nvidia-suspend nvidia-resume nvidia-hibernate
-sudo systemctl enable nvidia-suspend nvidia-resume nvidia-hibernate
+sudo systemctl unmask nvidia-suspend nvidia-suspend-then-hibernate nvidia-resume nvidia-hibernate
+sudo systemctl enable nvidia-suspend nvidia-suspend-then-hibernate nvidia-resume nvidia-hibernate
 
 # powerd: needed for full 133W TGP; keeps GPU at P0 idle (acceptable trade-off)
 sudo systemctl unmask nvidia-powerd && sudo systemctl enable nvidia-powerd
