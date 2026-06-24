@@ -334,9 +334,3 @@ EOF
 mkinitcpio -P
 
 ```
-
-## Disable touchpad battery-saving sleep mode
-
-```bash
-echo 'ACTION=="add", SUBSYSTEM=="i2c", ATTR{power/control}="on"' | sudo tee /etc/udev/rules.d/99-touchpad-power.rules
-```
