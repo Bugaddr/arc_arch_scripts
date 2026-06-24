@@ -191,9 +191,6 @@ sudo pacman -S --needed nvidia-open libva-nvidia-driver
 # powerd: needed for full 150W TGP
 sudo systemctl unmask nvidia-powerd && sudo systemctl enable nvidia-powerd
 
-# persistenced: server tool, wastes power on laptop, mask it
-sudo systemctl disable nvidia-persistenced && sudo systemctl mask nvidia-persistenced
-
 # Rebuild initramfs to apply modprobe changes
 sudo mkinitcpio -P
 ```
