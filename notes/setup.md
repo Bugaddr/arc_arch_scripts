@@ -293,8 +293,6 @@ sbctl verify | awk '/EFI\/(Linux|systemd|Boot)\/.* is not signed$/ {print $2}' |
 
 ```
 
-
-
 ## Enable TPM2
 
 1. **Install**
@@ -303,21 +301,18 @@ pacman -S --needed lvm2 tpm2-tools
 
 ```
 
-
 2. **Hooks**
 ```bash
-# Update Hooks like this
+# Update Hooks like this in /etc/mkinitcpio.conf
 HOOKS=(systemd autodetect microcode modconf kms keyboard sd-vconsole block sd-encrypt lvm2 filesystems fsck)
 ```
-
 
 3. **Enroll**
 ```bash
 systemd-cryptenroll --recovery-key /dev/nvme0n1p5
-systemd-cryptenroll /dev/nvme0n1p5 --wipe-slot=tpm2 --tpm2-device=auto --tpm2-pcrs=7
+systemd-cryptenroll --wipe-slot=tpm2 --tpm2-device=auto --tpm2-pcrs=7 /dev/nvme0n1p5
 
 ```
-
 
 4. **Crypttab (Overwrite)**
 ```bash
@@ -328,9 +323,13 @@ EOF
 
 ```
 
-
 5. **Finalize**
 ```bash
 mkinitcpio -P
 
+```
+
+6. **To change password later**
+```bash
+sudo cryptsetup luksChangeKey /dev/nvme0n1p5
 ```
