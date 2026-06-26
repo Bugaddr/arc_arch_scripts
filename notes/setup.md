@@ -240,12 +240,15 @@ mkdir -p /etc/sddm.conf.d
 cat <<EOF | tee /etc/sddm.conf.d/10-wayland-hidpi.conf
 [General]
 DisplayServer=wayland
-GreeterEnvironment=QT_WAYLAND_SHELL_INTEGRATION=layer-shell,QT_SCREEN_SCALE_FACTORS=1.5,QT_FONT_DPI=144
+GreeterEnvironment=QT_WAYLAND_SHELL_INTEGRATION=layer-shell
 
 [Wayland]
 CompositorCommand=kwin_wayland --drm --no-lockscreen --no-global-shortcuts --locale1
 EOF
 
+cp ~/.config/kwinoutputconfig.json /var/lib/sddm/.config/
+cp ~/.config/kcminputrc /var/lib/sddm/.config/
+chown sddm:sddm /var/lib/sddm/.config/kwinoutputconfig.json /var/lib/sddm/.config/kcminputrc
 ```
 
 ## Create consistent device paths for GPU
