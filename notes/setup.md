@@ -337,3 +337,9 @@ mkinitcpio -P
 ```bash
 sudo cryptsetup luksChangeKey /dev/nvme0n1p5
 ```
+
+## Disable Baloo
+
+```bash
+balooctl6 disable
+```
