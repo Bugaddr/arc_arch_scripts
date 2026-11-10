@@ -231,7 +231,13 @@ systemctl enable --now tuned tuned-ppd
 
 ```
 
-## SDDM
+## Plasma Login Manager (If not using sddm)
+
+```bash
+pacman -S --needed --noconfirm plasma-login-manager
+```
+
+## SDDM (Try to use PLM above)
 
 ```bash
 mkdir -p /etc/sddm.conf.d
